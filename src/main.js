@@ -1,13 +1,17 @@
 import Presenter from './presenter/presenter.js';
+import EventsModel from './model/event-model.js';
 
 const pageBody = document.querySelector('.page-body');
-const tripControls = pageBody.querySelector('.trip-controls');
-const tripEvents = pageBody.querySelector('.trip-events');
+const tripsContainer = pageBody.querySelector('.trip-events');
+const headerElement = pageBody.querySelector('.trip-controls');
 
-const presenter = new Presenter({
-  header: pageBody.querySelector('.trip-controls'),
-  events: tripEvents,
-  control: tripControls,
-});
+const events = new EventsModel();
 
+const presenter = new Presenter(
+  {
+    headerElement: headerElement,
+    tripsElement: tripsContainer,
+    eventsModel: events
+  }
+);
 presenter.init();
