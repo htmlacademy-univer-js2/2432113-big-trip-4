@@ -1,4 +1,4 @@
-import {createElement} from '../render.js';
+import AbstractView from '../framework/view/abstract-view.js';
 import { DATE_FORMAT_DAY, DATE_FORMAT_HOURS } from '../const.js';
 import { humanizeTaskDueDate, countDuration } from '../utils.js';
 const createEventTemplate = ({type, destination, basePrice, date}) => `
@@ -41,24 +41,23 @@ const createEventTemplate = ({type, destination, basePrice, date}) => `
     </li>
     `;
 
-export default class EventView {
-  constructor(event){
-    this.event = event;
+export default class EventView extends AbstractView{
+  #eventClick;
+  #event;
+  constructor({event, onEventClick}){
+    super();
+    this.#event = event;
+    this.#eventClick = onEventClick;
+
+    this.element.querySelector('.event__rollup-btn').addEventListener('click', this.#eventClickHandler);
   }
 
-  getTemplate() {
-    return createEventTemplate(this.event);
+  get template() {
+    return createEventTemplate(this.#event);
   }
 
-  getElement() {
-    if (!this.element) {
-      this.element = createElement(this.getTemplate());
-    }
-
-    return this.element;
-  }
-
-  removeElement() {
-    this.element = null;
-  }
+  #eventClickHandler = (evt) => {
+    evt.preventDefault();
+    this.#eventClick();
+  };
 }
