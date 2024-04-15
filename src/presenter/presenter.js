@@ -4,30 +4,38 @@ import EventListView from '../view/event-list-view.js';
 import EventEditorView from '../view/event-editor-view.js';
 import EventView from '../view/event-view.js';
 import { replace, render } from '../framework/render.js';
+import EventsNoneView from '../view/events-none-view.js';
 
 export default class Presenter {
   #events = [];
+  #filters = [];
   #eventListComponent = new EventListView();
-  #headerElement = null;
-  #eventsModel = null;
-  #tripsElement = null;
-  constructor({ headerElement, tripsElement, eventsModel}) {
+  #headerElement;
+  #eventsModel;
+  #tripsElement;
+  #filtersModel;
+  constructor({ headerElement, tripsElement, eventsModel, filtersModel}) {
     this.#headerElement = headerElement;
     this.#eventsModel = eventsModel;
     this.#tripsElement = tripsElement;
+    this.#filtersModel = filtersModel;
   }
 
   init() {
-    this.#events = [...this.#eventsModel.getEvents()];
-
-    render(new FiltersView(), this.#headerElement);
+    this.#events = [...this.#eventsModel.events];
+    render(new FiltersView(this.#events.length, Object.keys(this.#filtersModel.filters)), this.#headerElement);
     render(new SorterView(), this.#tripsElement);
     render(this.#eventListComponent, this.#tripsElement);
 
-    this.#events.forEach((event) =>
-    {
-      this.#renderEvent(event);
-    });
+    if (this.#events.length === 0){
+      render(new EventsNoneView(), this.#tripsElement);
+    }
+    else{
+      this.#events.forEach((event) =>
+      {
+        this.#renderEvent(event);
+      });
+    }
   }
 
   #renderEvent = (event) => {

@@ -4,7 +4,7 @@ import { MAX_EVENT_COUNT } from '../const.js';
 export default class EventsModel {
   #events = Array.from({length: MAX_EVENT_COUNT}, getRandomMockEvent);
 
-  getEvents() {
+  get events() {
     return this.#events;
   }
 
