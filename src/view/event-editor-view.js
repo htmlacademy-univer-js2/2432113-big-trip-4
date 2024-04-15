@@ -1,6 +1,16 @@
 import { createElement } from '../render.js';
+import { humanizeTaskDueDate } from '../utils.js';
+import { DATE_FORMAT_EDIT, BLANK_EVENT_STRUCT } from '../const.js';
 
-const createEventEditorTemplate = () => `
+const getPhotosTemplate = (cityPhotosSrc) => {
+  let photosTemplate = '';
+  for (let i = 0; i < cityPhotosSrc.length; i++){
+    photosTemplate += `<img class="event__photo" src="${cityPhotosSrc[i]}.jpg" alt="Event photo">`;
+  }
+  return photosTemplate;
+};
+
+const createEventEditorTemplate = ({type, destination, basePrice, date, desctiption, cityPhotosSrc}) => `
   <li class="trip-events__item">
   <form class="event event--edit" action="#" method="post">
     <header class="event__header">
@@ -35,7 +45,7 @@ const createEventEditorTemplate = () => `
             </div>
             <div class="event__type-item">
               <input id="event-type-flight-1" class="event__type-input  visually-hidden" type="radio" name="event-type" value="flight" checked>
-              <label class="event__type-label  event__type-label--flight" for="event-type-flight-1">Flight</label>
+              <label class="event__type-label  event__type-label--flight" for="event-type-flight-1">${type}</label>
             </div>
             <div class="event__type-item">
               <input id="event-type-check-in-1" class="event__type-input  visually-hidden" type="radio" name="event-type" value="check-in">
@@ -54,28 +64,28 @@ const createEventEditorTemplate = () => `
       </div>
       <div class="event__field-group  event__field-group--destination">
         <label class="event__label  event__type-output" for="event-destination-1">
-          Flight
+          ${type}
         </label>
-        <input class="event__input  event__input--destination" id="event-destination-1" type="text" name="event-destination" value="Geneva" list="destination-list-1">
+        <input class="event__input  event__input--destination" id="event-destination-1" type="text" name="event-destination" value="${destination}" list="destination-list-1">
         <datalist id="destination-list-1">
           <option value="Amsterdam"></option>
-          <option value="Geneva"></option>
+          <option value="${destination}"></option>
           <option value="Chamonix"></option>
         </datalist>
       </div>
       <div class="event__field-group  event__field-group--time">
         <label class="visually-hidden" for="event-start-time-1">From</label>
-        <input class="event__input  event__input--time" id="event-start-time-1" type="text" name="event-start-time" value="19/03/19 00:00">
+        <input class="event__input  event__input--time" id="event-start-time-1" type="text" name="event-start-time" value="${humanizeTaskDueDate(date.start, DATE_FORMAT_EDIT)}">
         &mdash;
         <label class="visually-hidden" for="event-end-time-1">To</label>
-        <input class="event__input  event__input--time" id="event-end-time-1" type="text" name="event-end-time" value="19/03/19 00:00">
+        <input class="event__input  event__input--time" id="event-end-time-1" type="text" name="event-end-time" value="${humanizeTaskDueDate(date.end, DATE_FORMAT_EDIT)}">
       </div>
       <div class="event__field-group  event__field-group--price">
         <label class="event__label" for="event-price-1">
           <span class="visually-hidden">Price</span>
           &euro;
         </label>
-        <input class="event__input  event__input--price" id="event-price-1" type="text" name="event-price" value="">
+        <input class="event__input  event__input--price" id="event-price-1" type="text" name="event-price" value="${basePrice}">
       </div>
       <button class="event__save-btn  btn  btn--blue" type="submit">Save</button>
       <button class="event__reset-btn" type="reset">Cancel</button>
@@ -128,14 +138,10 @@ const createEventEditorTemplate = () => `
       </section>
       <section class="event__section  event__section--destination">
         <h3 class="event__section-title  event__section-title--destination">Destination</h3>
-        <p class="event__destination-description">Geneva is a city in Switzerland that lies at the southern tip of expansive Lac Léman (Lake Geneva). Surrounded by the Alps and Jura mountains, the city has views of dramatic Mont Blanc.</p>
+        <p class="event__destination-description">${desctiption}</p>
         <div class="event__photos-container">
           <div class="event__photos-tape">
-            <img class="event__photo" src="img/photos/1.jpg" alt="Event photo">
-            <img class="event__photo" src="img/photos/2.jpg" alt="Event photo">
-            <img class="event__photo" src="img/photos/3.jpg" alt="Event photo">
-            <img class="event__photo" src="img/photos/4.jpg" alt="Event photo">
-            <img class="event__photo" src="img/photos/5.jpg" alt="Event photo">
+          ${getPhotosTemplate(cityPhotosSrc)}
           </div>
         </div>
       </section>
@@ -145,7 +151,17 @@ const createEventEditorTemplate = () => `
   `;
 
 export default class EventEditorView {
-  getTemplate = () => createEventEditorTemplate();
+
+  constructor(newEvent) {
+    if(newEvent){
+      this.event = newEvent;
+    }
+    else{
+      this.event = BLANK_EVENT_STRUCT;
+    }
+  }
+
+  getTemplate = () => createEventEditorTemplate(this.event);
 
   getElement() {
     if (!this.element) {
