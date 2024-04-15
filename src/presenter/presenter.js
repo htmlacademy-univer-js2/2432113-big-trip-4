@@ -3,26 +3,68 @@ import FiltersView from '../view/filters-view.js';
 import EventListView from '../view/event-list-view.js';
 import EventEditorView from '../view/event-editor-view.js';
 import EventView from '../view/event-view.js';
-import { render } from '../render.js';
-import { MAX_EVENT_COUNT } from '../const.js';
+import { replace, render } from '../framework/render.js';
 
 export default class Presenter {
+  #events = [];
+  #eventListComponent = new EventListView();
+  #headerElement = null;
+  #eventsModel = null;
+  #tripsElement = null;
   constructor({ headerElement, tripsElement, eventsModel}) {
-    this.headerElement = headerElement;
-    this.eventsModel = eventsModel;
-    this.eventListComponent = new EventListView();
-    this.tripsElement = tripsElement;
+    this.#headerElement = headerElement;
+    this.#eventsModel = eventsModel;
+    this.#tripsElement = tripsElement;
   }
 
   init() {
-    this.events = [...this.eventsModel.getEvents()];
-    render(new FiltersView(), this.headerElement);
-    render(new SorterView(), this.tripsElement);
-    render(this.eventListComponent, this.tripsElement);
-    render(new EventEditorView(this.events[0]), this.eventListComponent.getElement());
+    this.#events = [...this.#eventsModel.getEvents()];
 
-    for (let i = 1; i < MAX_EVENT_COUNT; i++) {
-      render(new EventView(this.events[i]), this.eventListComponent.getElement());
-    }
+    render(new FiltersView(), this.#headerElement);
+    render(new SorterView(), this.#tripsElement);
+    render(this.#eventListComponent, this.#tripsElement);
+
+    this.#events.forEach((event) =>
+    {
+      this.#renderEvent(event);
+    });
   }
+
+  #renderEvent = (event) => {
+    const onDocumentKeyDown = (evt) => {
+      if (evt.key === 'Escape') {
+        evt.preventDefault();
+        replaceEditToEvent();
+        document.removeEventListener('keydown', onDocumentKeyDown);
+      }
+    };
+
+    const eventComponent = new EventView(
+      {
+        event: event,
+        onEventClick: () => {
+          replaceEventToEdit();
+          document.addEventListener('keydown', onDocumentKeyDown);
+        }
+      }
+    );
+    const editComponent = new EventEditorView(
+      {
+        event: event,
+        onEventClick: () =>{
+          replaceEditToEvent();
+          document.removeEventListener('keydown', onDocumentKeyDown);
+        }
+      }
+    );
+
+    function replaceEventToEdit() {
+      replace(editComponent, eventComponent);
+    }
+
+    function replaceEditToEvent() {
+      replace(eventComponent, editComponent);
+    }
+    render(eventComponent, this.#eventListComponent.element);
+  };
 }

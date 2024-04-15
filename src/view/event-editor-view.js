@@ -1,6 +1,6 @@
-import { createElement } from '../render.js';
 import { humanizeTaskDueDate } from '../utils.js';
-import { DATE_FORMAT_EDIT, BLANK_EVENT_STRUCT } from '../const.js';
+import { DATE_FORMAT_EDIT} from '../const.js';
+import AbstractView from '../framework/view/abstract-view.js';
 
 const getPhotosTemplate = (cityPhotosSrc) => {
   let photosTemplate = '';
@@ -150,28 +150,25 @@ const createEventEditorTemplate = ({type, destination, basePrice, date, desctipt
   </li>
   `;
 
-export default class EventEditorView {
-
-  constructor(newEvent) {
-    if(newEvent){
-      this.event = newEvent;
-    }
-    else{
-      this.event = BLANK_EVENT_STRUCT;
-    }
+export default class EventEditorView extends AbstractView{
+  #event;
+  #eventEditButton;
+  constructor({event, onEventClick}) {
+    super();
+    this.#eventEditButton = onEventClick;
+    this.#event = event;
+    this.element
+      .addEventListener('submit', this.#eventClickHandler);
+    this.element
+      .addEventListener('reset', this.#eventClickHandler);
   }
 
-  getTemplate = () => createEventEditorTemplate(this.event);
-
-  getElement() {
-    if (!this.element) {
-      this.element = createElement(this.getTemplate());
-    }
-
-    return this.element;
+  get template() {
+    return createEventEditorTemplate(this.#event);
   }
 
-  removeElement() {
-    this.element = null;
-  }
+  #eventClickHandler = (evt) => {
+    evt.preventDefault();
+    this.#eventEditButton();
+  };
 }
