@@ -1,78 +1,96 @@
 import SorterView from '../view/sorter-view.js';
 import FiltersView from '../view/filters-view.js';
 import EventListView from '../view/event-list-view.js';
-import EventEditorView from '../view/event-editor-view.js';
-import EventView from '../view/event-view.js';
-import { replace, render } from '../framework/render.js';
+//import EventEditorView from '../view/event-editor-view.js';
+//import EventView from '../view/event-view.js';
+import { render } from '../framework/render.js';
 import EventsNoneView from '../view/events-none-view.js';
+import EventPresenter from './event-presenter.js';
+import { updateItem } from '../utils.js';
 
 export default class Presenter {
   #events = [];
-  #filters = [];
-  #eventListComponent = new EventListView();
+  #eventListContainer = new EventListView();
   #headerElement;
   #eventsModel;
-  #tripsElement;
+  #eventsContainer;
   #filtersModel;
-  constructor({ headerElement, tripsElement, eventsModel, filtersModel}) {
+  #eventPresenters = new Map();
+
+  constructor({ headerElement, eventsContainer, eventsModel, filtersModel}) {
     this.#headerElement = headerElement;
     this.#eventsModel = eventsModel;
-    this.#tripsElement = tripsElement;
+    this.#eventsContainer = eventsContainer;
     this.#filtersModel = filtersModel;
   }
 
   init() {
     this.#events = [...this.#eventsModel.events];
-    render(new FiltersView(this.#events.length, Object.keys(this.#filtersModel.filters)), this.#headerElement);
-    render(new SorterView(), this.#tripsElement);
-    render(this.#eventListComponent, this.#tripsElement);
-
-    if (this.#events.length === 0){
-      render(new EventsNoneView(), this.#tripsElement);
-    }
-    else{
-      this.#events.forEach((event) =>
-      {
-        this.#renderEvent(event);
-      });
-    }
+    this.#renderComponents();
   }
 
   #renderEvent = (event) => {
-    const onDocumentKeyDown = (evt) => {
-      if (evt.key === 'Escape') {
-        evt.preventDefault();
-        replaceEditToEvent();
-        document.removeEventListener('keydown', onDocumentKeyDown);
-      }
-    };
-
-    const eventComponent = new EventView(
+    const eventPresenter = new EventPresenter(
       {
-        event: event,
-        onEventClick: () => {
-          replaceEventToEdit();
-          document.addEventListener('keydown', onDocumentKeyDown);
-        }
+        eventsContainer: this.#eventsContainer,
+        onEventChange: this.#onEventChange,
+        onModeChange: this.#onModeChange
       }
     );
-    const editComponent = new EventEditorView(
-      {
-        event: event,
-        onEventClick: () =>{
-          replaceEditToEvent();
-          document.removeEventListener('keydown', onDocumentKeyDown);
-        }
-      }
-    );
+    eventPresenter.init(event);
+    this.#eventPresenters.set(event.id, eventPresenter);
+  };
 
-    function replaceEventToEdit() {
-      replace(editComponent, eventComponent);
-    }
+  #onModeChange = () => {
+    this.#eventPresenters.forEach((presenter) => presenter.resetView());
+  };
 
-    function replaceEditToEvent() {
-      replace(eventComponent, editComponent);
+  #renderEventsNone(){
+    render(new EventsNoneView(), this.#eventsContainer);
+  }
+
+  #renderSorter(){
+    render(new SorterView(), this.#headerElement);
+  }
+
+  #renderFilters(){
+    render(new FiltersView(this.#events.length, Object.keys(this.#filtersModel.filters)), this.#headerElement);
+  }
+
+  #renderEventsContainer(){
+    render(this.#eventListContainer, this.#eventsContainer);
+  }
+
+  #initEvents(){
+    this.#renderEventsContainer();
+
+    if(this.#events.length === 0){
+      this.#renderEventsNone();
     }
-    render(eventComponent, this.#eventListComponent.element);
+    else{
+      this.#renderEvents();
+    }
+  }
+
+  #clearEvents() {
+    this.#eventPresenters.forEach((presenter) => presenter.destroy());
+    this.#eventPresenters.clear();
+  }
+
+  #renderComponents() {
+    this.#renderSorter();
+    this.#renderFilters();
+    this.#initEvents();
+  }
+
+  #renderEvents() {
+    this.#events.forEach((event) => {
+      this.#renderEvent(event);
+    });
+  }
+
+  #onEventChange = (newEvent) => {
+    this.#events = updateItem(this.#events, newEvent);
+    this.#eventPresenters.get(newEvent.id).init(newEvent);
   };
 }

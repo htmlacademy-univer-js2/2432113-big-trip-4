@@ -152,10 +152,10 @@ const createEventEditorTemplate = ({type, destination, basePrice, date, desctipt
 
 export default class EventEditorView extends AbstractView{
   #event;
-  #eventEditButton;
+  #eventEditClick;
   constructor({event, onEventClick}) {
     super();
-    this.#eventEditButton = onEventClick;
+    this.#eventEditClick = onEventClick;
     this.#event = event;
     this.element
       .addEventListener('submit', this.#eventClickHandler);
@@ -169,6 +169,6 @@ export default class EventEditorView extends AbstractView{
 
   #eventClickHandler = (evt) => {
     evt.preventDefault();
-    this.#eventEditButton();
+    this.#eventEditClick(this.#event);
   };
 }
