@@ -49,8 +49,9 @@ export default class EventPresenter {
         onEventClick: () =>{
           this.#replaceEditorToEvent();
           document.removeEventListener('keydown', this.#onDocumentKeyDown);
-        }
-      }
+        },
+        onEventChange: this.#onEventChange
+      },
     );
 
     if(prevEvent === undefined || prevEdit === undefined){

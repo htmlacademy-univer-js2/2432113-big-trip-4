@@ -1,7 +1,24 @@
 import AbstractView from '../framework/view/abstract-view.js';
 import { DATE_FORMAT_DAY, DATE_FORMAT_HOURS } from '../const.js';
 import { humanizeTaskDueDate, countDuration } from '../utils.js';
-const createEventTemplate = ({type, destination, basePrice, date, isFavorite}) => `
+
+const createOffers = (offers) => {
+  let res = '';
+  offers.forEach((offer) => {
+    if(offer.checked){
+      res += `
+      <li class="event__offer">
+        <span class="event__offer-title">${offer.title}</span>
+        +€&nbsp;
+        <span class="event__offer-price">${offer.price}</span>
+      </li>
+      `;
+    }
+  });
+  return res;
+};
+
+const createEventTemplate = ({type, destination, basePrice, date, offers, isFavorite}) => `
     <li class="trip-events__item">
       <div class="event">
       <time class="event__date" datetime="${date.start}">${humanizeTaskDueDate(date.start, DATE_FORMAT_DAY)}</time>
@@ -22,11 +39,7 @@ const createEventTemplate = ({type, destination, basePrice, date, isFavorite}) =
         </p>
         <h4 class="visually-hidden">Offers:</h4>
         <ul class="event__selected-offers">
-          <li class="event__offer">
-            <span class="event__offer-title">Order Uber</span>
-            &plus;&euro;&nbsp;
-            <span class="event__offer-price">20</span>
-          </li>
+          ${createOffers(offers)}
         </ul>
         <button class="event__favorite-btn ${isFavorite ? 'event__favorite-btn--active' : ''}" type="button">
           <span class="visually-hidden">Add to favorite</span>
