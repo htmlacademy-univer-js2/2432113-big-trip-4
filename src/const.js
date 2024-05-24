@@ -54,7 +54,7 @@ const MOCK_DATES = [
 const MAX_EVENT_PRICE = 1000;
 const PHOTOS_COUNT = 5;
 const MAX_OFFER_ID = 10;
-const MAX_EVENT_COUNT = 3;
+const MAX_EVENT_COUNT = 4;
 
 const PRESENTER_MODES = {
   DEFAULT: 'DEFAULT',

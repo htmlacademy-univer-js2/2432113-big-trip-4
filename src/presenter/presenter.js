@@ -7,6 +7,7 @@ import { render } from '../framework/render.js';
 import EventsNoneView from '../view/events-none-view.js';
 import EventPresenter from './event-presenter.js';
 import { updateItem } from '../utils.js';
+import { getSortingAlgorythm, SORT_TYPES } from '../sorter-utils.js';
 
 export default class Presenter {
   #events = [];
@@ -16,6 +17,9 @@ export default class Presenter {
   #eventsContainer;
   #filtersModel;
   #eventPresenters = new Map();
+  #currentSort = SORT_TYPES.DEFAULT;
+  #sorterComponent;
+  #primaryEvents;
 
   constructor({ headerElement, eventsContainer, eventsModel, filtersModel}) {
     this.#headerElement = headerElement;
@@ -26,6 +30,7 @@ export default class Presenter {
 
   init() {
     this.#events = [...this.#eventsModel.events];
+    this.#primaryEvents = this.#events;
     this.#renderComponents();
   }
 
@@ -49,8 +54,25 @@ export default class Presenter {
     render(new EventsNoneView(), this.#eventsContainer);
   }
 
+  #sortAndUpdateEvents = (sortType) =>{
+    this.#currentSort = sortType;
+    this.#events.sort(getSortingAlgorythm(sortType));
+    this.#clearEvents();
+    this.#renderEvents();
+  };
+
+  #onSort = (sortType) => {
+    if (this.#currentSort === sortType) {
+      return;
+    }
+    this.#sortAndUpdateEvents(sortType);
+  };
+
   #renderSorter(){
-    render(new SorterView(), this.#headerElement);
+    this.#sorterComponent = new SorterView({
+      onSort: this.#onSort
+    });
+    render(this.#sorterComponent, this.#eventsContainer);
   }
 
   #renderFilters(){
@@ -68,7 +90,7 @@ export default class Presenter {
       this.#renderEventsNone();
     }
     else{
-      this.#renderEvents();
+      this.#sortAndUpdateEvents(this.#currentSort);
     }
   }
 
@@ -79,8 +101,8 @@ export default class Presenter {
 
   #renderComponents() {
     this.#renderSorter();
-    this.#renderFilters();
     this.#initEvents();
+    this.#renderFilters();
   }
 
   #renderEvents() {
@@ -91,6 +113,7 @@ export default class Presenter {
 
   #onEventChange = (newEvent) => {
     this.#events = updateItem(this.#events, newEvent);
+    this.#primaryEvents = updateItem(this.#primaryEvents, newEvent);
     this.#eventPresenters.get(newEvent.id).init(newEvent);
   };
 }
