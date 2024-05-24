@@ -8,4 +8,9 @@ const humanizeTaskDueDate = (dueDate, format) => dueDate ? dayjs(dueDate).format
 
 const countDuration = (dateStart, dateEnd) => dayjs(dateEnd).diff(dateStart, 'm');
 
-export {getRandomArrayElement, getRandomInt, humanizeTaskDueDate, countDuration};
+const updateItem = (items, update) => {
+  const updatedItems = items.map((item) => (item.id === update.id ? update : item));
+  return updatedItems;
+};
+
+export {getRandomArrayElement, getRandomInt, humanizeTaskDueDate, countDuration, updateItem};

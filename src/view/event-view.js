@@ -1,7 +1,7 @@
 import AbstractView from '../framework/view/abstract-view.js';
 import { DATE_FORMAT_DAY, DATE_FORMAT_HOURS } from '../const.js';
 import { humanizeTaskDueDate, countDuration } from '../utils.js';
-const createEventTemplate = ({type, destination, basePrice, date}) => `
+const createEventTemplate = ({type, destination, basePrice, date, isFavorite}) => `
     <li class="trip-events__item">
       <div class="event">
       <time class="event__date" datetime="${date.start}">${humanizeTaskDueDate(date.start, DATE_FORMAT_DAY)}</time>
@@ -28,7 +28,7 @@ const createEventTemplate = ({type, destination, basePrice, date}) => `
             <span class="event__offer-price">20</span>
           </li>
         </ul>
-        <button class="event__favorite-btn event__favorite-btn--active" type="button">
+        <button class="event__favorite-btn ${isFavorite ? 'event__favorite-btn--active' : ''}" type="button">
           <span class="visually-hidden">Add to favorite</span>
           <svg class="event__favorite-icon" width="28" height="28" viewBox="0 0 28 28">
             <path d="M14 21l-8.22899 4.3262 1.57159-9.1631L.685209 9.67376 9.8855 8.33688 14 0l4.1145 8.33688 9.2003 1.33688-6.6574 6.48934 1.5716 9.1631L14 21z"/>
@@ -44,12 +44,16 @@ const createEventTemplate = ({type, destination, basePrice, date}) => `
 export default class EventView extends AbstractView{
   #eventClick;
   #event;
-  constructor({event, onEventClick}){
+  #eventFavoriteClick;
+
+  constructor({event, onEventClick, onFavoriteClick}){
     super();
     this.#event = event;
     this.#eventClick = onEventClick;
+    this.#eventFavoriteClick = onFavoriteClick;
 
     this.element.querySelector('.event__rollup-btn').addEventListener('click', this.#eventClickHandler);
+    this.element.querySelector('.event__favorite-btn ').addEventListener('click', this.#eventFavoriteClick);
   }
 
   get template() {
