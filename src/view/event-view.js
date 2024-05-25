@@ -32,7 +32,7 @@ const createEventTemplate = ({type, destination, basePrice, date, offers, isFavo
             &mdash;
             <time class="event__end-time" datetime="${date.end}}">${humanizeTaskDueDate(date.end, DATE_FORMAT_HOURS)}</time>
           </p>
-          <p class="event__duration">${countDuration(date.start, date.end)} minutes</p>
+          <p class="event__duration">${countDuration(date.start, date.end)}</p>
         </div>
         <p class="event__price">
           &euro;&nbsp;<span class="event__price-value">${basePrice}</span>
