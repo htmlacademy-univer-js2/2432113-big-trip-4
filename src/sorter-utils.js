@@ -21,38 +21,39 @@ function getWeightForNullDate(dateA, dateB) {
   return null;
 }
 
-const getTimeInMinutes = (date) => dayjs(date).hour() * 60 + dayjs(date).minute();
+const getDurationInMinutes = (start, end) =>
+  dayjs(end).diff(dayjs(start), 'minute');
 
-const sortByTime = (point1, point2) => {
-  const weight = getWeightForNullDate(point1.date.start, point2.date.start);
+
+const sortByTime = (event1, event2) => {
+  const weight = getWeightForNullDate(event1.date.start, event2.date.start);
   if (weight !== null) {
     return weight;
   }
 
-  const time1 = getTimeInMinutes(point1.date.start);
-  const time2 = getTimeInMinutes(point2.date.start);
+  const duration1 = getDurationInMinutes(event1.date.start, event1.date.end);
+  const duration2 = getDurationInMinutes(event2.date.start, event2.date.end);
 
-  return time2 - time1;
+  return duration2 - duration1;
 };
 
-const sortByName = (point1, point2) =>
-  point1.type[0].localeCompare(point2.type[0]);
+const sortByName = (event1, event2) =>
+  event1.type[0].localeCompare(event2.type[0]);
 
-const sortByPrice = (point1, point2) =>
-  point2.basePrice - point1.basePrice;
+const sortByPrice = (event1, event2) =>
+  event2.basePrice - event1.basePrice;
 
-//переделать в будущем
-const sortByOffers = (point1, point2) =>
-  point2.offers.id - point1.offers.id;
+const sortByOffers = (event1, event2) =>
+  event2.offers.length - event1.offers.length;
 
-const sortByDefault = (point1, point2) => {
-  const weight = getWeightForNullDate(point1.date.start, point2.date.start);
+const sortByDefault = (event1, event2) => {
+  const weight = getWeightForNullDate(event1.date.start, event2.date.start);
 
   if (weight !== null){
     return weight;
   }
 
-  return dayjs(point1.date.start).diff(dayjs(point2.date.start));
+  return dayjs(event1.date.start).diff(dayjs(event2.date.start));
 };
 
 const getSortingAlgorythm = (sortType) => {

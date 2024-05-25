@@ -3,6 +3,8 @@ import { DATE_FORMAT_EDIT} from '../const.js';
 import AbstractStatefulView from '../framework/view/abstract-stateful-view.js';
 import { DESTINATIONS } from '../const.js';
 import { OFFERS } from '../mock/offers-mock.js';
+import flatpickr from 'flatpickr';
+import 'flatpickr/dist/flatpickr.min.css';
 
 const createPicture = (picture) =>
   `
@@ -173,6 +175,8 @@ const createEventEditorTemplate = ({type, destination, basePrice, date, desctipt
 export default class EventEditorView extends AbstractStatefulView{
   #onEventChange;
   #eventEditClick;
+  #datepickerFrom;
+  #datepickerTo;
   constructor({event, onEventClick, onEventChange}) {
     super();
     this._setState(EventEditorView.parseEventToState(event));
@@ -183,6 +187,57 @@ export default class EventEditorView extends AbstractStatefulView{
 
   get template() {
     return createEventEditorTemplate(this._state);
+  }
+
+  removeElement() {
+    super.removeElement();
+    this.#destroyDatepickers();
+  }
+
+  #destroyDatepickers() {
+    if (this.#datepickerFrom) {
+      this.#datepickerFrom.destroy();
+      this.#datepickerFrom = null;
+    }
+    if (this.#datepickerTo) {
+      this.#datepickerTo.destroy();
+      this.#datepickerTo = null;
+    }
+  }
+
+  #onDateChangeFrom = ([userDate]) => {
+    this.updateElement({
+      date: {
+        start: userDate,
+        end: this._state.date.end,
+      },
+    });
+  };
+
+  #onDateChangeTo = ([userDate]) => {
+    this.updateElement({
+      date: {
+        start: this._state.date.start,
+        end: userDate,
+      },
+    });
+  };
+
+  #setDatepickers() {
+    const timeInputs = this.element.querySelectorAll('.event__input--time');
+    if (this._state.date) {
+      this.#datepickerFrom = this.#createDatepicker(timeInputs[0], this.#onDateChangeFrom);
+      this.#datepickerTo = this.#createDatepicker(timeInputs[1], this.#onDateChangeTo);
+    }
+  }
+
+  #createDatepicker(element, onChange) {
+    return flatpickr(element, {
+      enableTime: true,
+      dateFormat: 'd/m/y H:i',
+      defaultDate: '',
+      onChange: onChange,
+    });
   }
 
   _restoreHandlers() {
@@ -199,6 +254,7 @@ export default class EventEditorView extends AbstractStatefulView{
     });
 
     this.element.addEventListener('submit', this.#onSaving);
+    this.#setDatepickers();
   }
 
   #onOffersChange = (evt) => {
