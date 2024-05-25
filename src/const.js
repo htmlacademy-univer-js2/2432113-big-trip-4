@@ -1,17 +1,15 @@
 const BLANK_EVENT_STRUCT =
 {
   id: 1,
-  type: null,
-  destination: null,
+  type: 'Chose',
+  destination: 'Choose',
   basePrice: 0,
   date: {
-    start: null,
-    end: null,
+    start: new Date(Date.UTC(2000, 1, 1, 0, 0, 0, 0)),
+    end: new Date(Date.UTC(2000, 1, 1, 1, 0, 0, ))
   },
-  offers: {
-    id: 1
-  },
-  desctiption:'',
+  offers: [],
+  desctiption:'Write',
   isFavorite: false,
   cityPhotosSrc: []
 };
@@ -65,7 +63,27 @@ const DATE_FORMAT_EDIT = 'DD/MM/YY hh:mm';
 const DATE_FORMAT_DAY = 'MMM DD';
 const DATE_FORMAT_HOURS = 'hh-mm';
 
+const UserActions = {
+  UPDATE_EVENT: 'update',
+  ADD_EVENT: 'add',
+  DELETE_EVENT: 'delete',
+};
+
+const UpdateTypes = {
+  PATCH: 'PATCH',
+  MINOR: 'MINOR',
+  MAJOR: 'MAJOR',
+};
+
+const FilterTypes = {
+  ALL: 'everything',
+  FUTURE: 'future',
+  PRESENT: 'present',
+  PAST: 'past',
+};
+
 export {DESTINATIONS, EVENT_TYPES, MOCK_DATES,
   PHOTOS_COUNT, MAX_OFFER_ID, MAX_EVENT_COUNT,
   BLANK_EVENT_STRUCT, MAX_EVENT_PRICE, DATE_FORMAT_DAY,
-  DATE_FORMAT_EDIT, DATE_FORMAT_HOURS, PRESENTER_MODES};
+  DATE_FORMAT_EDIT, DATE_FORMAT_HOURS, PRESENTER_MODES,
+  UserActions, UpdateTypes, FilterTypes};

@@ -1,7 +1,8 @@
 import { render, replace, remove } from '../framework/render';
 import EventEditorView from '../view/event-editor-view';
 import EventView from '../view/event-view';
-import { PRESENTER_MODES } from '../const';
+import {UserActions, UpdateTypes, PRESENTER_MODES } from '../const';
+import { isEscKey } from '../utils';
 
 export default class EventPresenter {
 
@@ -21,8 +22,9 @@ export default class EventPresenter {
   }
 
   #onDocumentKeyDown = (evt) => {
-    if (evt.key === 'Escape') {
+    if (isEscKey(evt.key)) {
       evt.preventDefault();
+      this.#editorComponent.reset(this.#event);
       this.#replaceEditorToEvent();
       document.removeEventListener('keydown', this.#onDocumentKeyDown);
     }
@@ -39,18 +41,15 @@ export default class EventPresenter {
           this.#replaceEventToEditor();
           document.addEventListener('keydown', this.#onDocumentKeyDown);
         },
-        onFavoriteClick: this.#onFavoriteClick,
+        onFavoriteClick: this.#onFavoriteClick
       }
     );
 
     this.#editorComponent = new EventEditorView(
       {
         event: this.#event,
-        onEventClick: () =>{
-          this.#replaceEditorToEvent();
-          document.removeEventListener('keydown', this.#onDocumentKeyDown);
-        },
-        onEventChange: this.#onEventChange
+        onSubmit: this.#onFormSubmit,
+        deleteEvent: this.#onDeleteEvent
       },
     );
 
@@ -84,16 +83,48 @@ export default class EventPresenter {
 
   #replaceEventToEditor () {
     replace(this.#editorComponent, this.#eventComponent);
+    document.addEventListener('keydown', this.#onDocumentKeyDown);
     this.#onModeChange();
     this.#mode = PRESENTER_MODES.EDITING;
   }
 
   #replaceEditorToEvent () {
     replace(this.#eventComponent, this.#editorComponent);
+    document.addEventListener('keydown', this.#onDocumentKeyDown);
     this.#mode = PRESENTER_MODES.DEFAULT;
   }
 
   #onFavoriteClick = ( ) => {
-    this.#onEventChange({...this.#event, isFavorite: !this.#event.isFavorite});
+    this.#onEventChange(
+      UserActions.UPDATE_EVENT,
+      UpdateTypes.MINOR,
+      {...this.#event, isFavorite: !this.#event.isFavorite},
+    );
+  };
+
+  #onFormSubmit = (update) => {
+    if(update === undefined){
+      this.#editorComponent.reset(this.#event);
+      this.#replaceEditorToEvent();
+      return;
+    }
+    const isMajor = () =>
+      update.basePrice !== this.#event.basePrice ||
+        update.date.start !== this.#event.date.start ||
+        update.type !== this.#event.type;
+
+    this.#onEventChange(
+      UserActions.UPDATE_EVENT,
+      isMajor() ? UpdateTypes.MAJOR : UpdateTypes.MINOR,
+      update
+    );
+  };
+
+  #onDeleteEvent = (event) =>{
+    this.#onEventChange(
+      UserActions.DELETE_EVENT,
+      UpdateTypes.MAJOR,
+      event,
+    );
   };
 }

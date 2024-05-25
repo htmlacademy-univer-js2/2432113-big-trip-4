@@ -5,6 +5,7 @@ const getRandomInt = (maxNumber) => Math.floor(Math.random() * maxNumber);
 
 const getRandomArrayElement = (items) => items[getRandomInt(items.length)];
 
+const isEscKey = (key) => key === 'Escape';
 
 const humanizeTaskDueDate = (dueDate, format) => dueDate ? dayjs(dueDate).format(format) : '';
 
@@ -25,9 +26,24 @@ const countDuration = (dateStart, dateEnd) => {
   }
 };
 
+const isEventPresent = (point) => {
+  const now = dayjs();
+  return (
+    dayjs(point.date.start).isSame(now) ||
+    (dayjs(point.date.start).isBefore(now) && dayjs(point.date.end).isAfter(now))
+  );
+};
+
+const filter = {
+  'everything': (data) => [...data],
+  'future': (data) => data.filter((point) => dayjs(point.date.start).isAfter(dayjs())),
+  'present': (data) => data.filter(isEventPresent),
+  'past': (data) => data.filter((point) => dayjs(point.date.end).isBefore(dayjs())),
+};
+
 const updateItem = (items, update) => {
   const updatedItems = items.map((item) => (item.id === update.id ? update : item));
   return updatedItems;
 };
 
-export {getRandomArrayElement, getRandomInt, humanizeTaskDueDate, countDuration, updateItem};
+export {isEscKey, filter, getRandomArrayElement, getRandomInt, humanizeTaskDueDate, countDuration, updateItem};
