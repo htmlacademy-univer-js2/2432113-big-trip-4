@@ -148,11 +148,13 @@ const createEventEditorTemplate = ({type, destination, basePrice, date, desctipt
       </div>
 
       <button class="event__save-btn  btn  btn--blue" type="submit">Save</button>
-      <button class="event__reset-btn" type="reset">Cancel</button>
+      <button class="event__reset-btn" type="reset">Delete</button>
+      <button class="event__rollup-btn" type="button">
+        <span class="visually-hidden">Open event</span>
+      </button>
     </header>
     <section class="event__details">
       ${createOffersEdit(offers)}
-
 
       <section class="event__section  event__section--destination">
         <h3 class="event__section-title  event__section-title--destination">Destination</h3>
@@ -175,14 +177,20 @@ const createEventEditorTemplate = ({type, destination, basePrice, date, desctipt
 export default class EventEditorView extends AbstractStatefulView{
   #onEventChange;
   #eventEditClick;
+  #onSubmit;
   #datepickerFrom;
   #datepickerTo;
-  constructor({event, onEventClick, onEventChange}) {
+  #deleteEvent;
+  #event;
+  constructor({event, onSubmit, deleteEvent}) {
     super();
     this._setState(EventEditorView.parseEventToState(event));
-    this.#eventEditClick = onEventClick;
-    this.#onEventChange = onEventChange;
+    this.#onSubmit = onSubmit;
+
     this._restoreHandlers();
+
+    this.#event = event;
+    this.#deleteEvent = deleteEvent;
   }
 
   get template() {
@@ -242,13 +250,15 @@ export default class EventEditorView extends AbstractStatefulView{
 
   _restoreHandlers() {
     const handlers = [
-      { selector: '.event__input--price', event: 'change', handler: this.#onPriceInput },
-      { selector: '.event__reset-btn', event: 'click', handler: this.#onEditorClose },
+      { selector: '.event__input--price', event: 'input', handler: this.#onPriceInput },
+      { selector: '.event__reset-btn', event: 'click', handler: this.#onDeleteButtonClick },
+      { selector: '.event__rollup-btn', event: 'click', handler: this.#onEditorClose },
       { selector: '.event__input--destination', event: 'change', handler: this.#onDestinationChange },
-      { selector: '.event__type-group', event: 'change', handler: this.#onTypeChange },
-      { selector: '.event__offer-checkbox', event: 'change', handler: this.#onOffersChange}
+      { selector: '.event__type-group', event: 'input', handler: this.#onTypeChange },
+      { selector: '.event__offer-checkbox', event: 'change', handler: this.#onOffersChange }
     ];
-    handlers.forEach(({ selector, event, handler}) => {
+
+    handlers.forEach(({ selector, event, handler }) => {
       const elements = this.element.querySelectorAll(selector);
       elements.forEach((element) => element.addEventListener(event, handler));
     });
@@ -281,15 +291,27 @@ export default class EventEditorView extends AbstractStatefulView{
     });
   };
 
+  reset(event) {
+    this.updateElement(
+      EventEditorView.parseEventToState(event),
+    );
+  }
+
   #onEditorClose = (evt) => {
     evt.preventDefault();
-    this.#eventEditClick(this._state);
+    this.reset(this.#event);
+    this.#onSubmit();
+  };
+
+  #onDeleteButtonClick = (evt) => {
+    evt.preventDefault();
+    this.#deleteEvent(EventEditorView.parseStateToEvent(this._state));
   };
 
   #onSaving = (evt) => {
     evt.preventDefault();
+    this.#onSubmit(EventEditorView.parseStateToEvent(this._state));
     this.#onEditorClose(evt);
-    this.#onEventChange(EventEditorView.parseStateToEvent(this._state));
   };
 
   #onDestinationChange = (evt) => {
@@ -299,9 +321,12 @@ export default class EventEditorView extends AbstractStatefulView{
   };
 
   #onPriceInput = (evt) => {
-    this.updateElement({
-      basePrice: evt.target.value,
-    });
+    const regex = /^\d{1,6}$/;
+    if (regex.test(evt.target.value)) {
+      this.updateElement({
+        basePrice: evt.target.value,
+      });
+    }
   };
 
   static parseEventToState(event){

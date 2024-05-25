@@ -1,19 +1,17 @@
-import { dayjs } from 'dayjs';
+import { FilterTypes } from '../const';
+import Observable from '../framework/observable';
 
 
-export default class FiltersModel {
-  #filters;
+export default class FiltersModel extends Observable {
 
-  constructor () {
-    this.#filters = {
-      'everything': (data) => [...data],
-      'future': (data) => data.filter((point) => dayjs(point.date.start).isBefore(dayjs(new Date())).day),
-      'present': (data) => data.filter((point) => dayjs(point.date.start.day).isSame(dayjs(new Date()).day)),
-      'past': (data) => data.filter((point) => dayjs(point.date.start).isAfter(dayjs(new Date())).day)
-    };
+  #filter = FilterTypes.ALL;
+
+  get filter(){
+    return this.#filter;
   }
 
-  get filters(){
-    return this.#filters;
+  setFilter(updateType, filter) {
+    this.#filter = filter;
+    this._notify(updateType, filter);
   }
 }
