@@ -1,20 +1,18 @@
 import SorterView from '../view/sorter-view.js';
-//import FiltersView from '../view/filters-view.js';
 import EventListView from '../view/event-list-view.js';
-//import EventEditorView from '../view/event-editor-view.js';
-//import EventView from '../view/event-view.js';
 import { remove, render } from '../framework/render.js';
 import EventsNoneView from '../view/events-none-view.js';
 import EventPresenter from './event-presenter.js';
-//import { updateItem } from '../utils.js';
 import { UpdateTypes, UserActions, FilterTypes } from '../const.js';
 import { getSortingAlgorythm, SORT_TYPES } from '../sorter-utils.js';
 import FiltersPresenter from './filters-presenter.js';
 import EventAdderPresenter from './event-adder-presenter.js';
 import { filter } from '../utils.js';
+import LoadingView from '../view/loading-view.js';
+import EventAdderView from '../view/event-adder-view.js';
+import Observable from '../framework/observable.js';
 
-export default class Presenter {
-  //#events = [];
+export default class Presenter extends Observable {
   #eventListContainer = new EventListView();
   #headerElement;
   #eventsModel;
@@ -28,37 +26,64 @@ export default class Presenter {
   #eventsNoneComponent;
   #filterType = FilterTypes.ALL;
   #eventAdderPresenter;
+  #loadingComponent = new LoadingView();
+  #isLoading = true;
+  #offersModel;
+  #destinationsModel;
 
   constructor({
     headerElement,
     eventsContainer,
     eventsModel,
     filtersModel,
-    onAddEventClose
+    onAddEventClose,
+    offersModel,
+    destinationsModel,
   }) {
+    super();
     this.#headerElement = headerElement;
     this.#eventsModel = eventsModel;
     this.#eventsContainer = eventsContainer;
     this.#filtersModel = filtersModel;
     this.#onAddEventClose = onAddEventClose;
-
-    this.#eventAdderPresenter = new EventAdderPresenter({
-      eventsContainer: this.#eventsContainer,
-      onDataChange: this.#handleViewAction,
-      onDestroy: this.#onAddEventClose
-    });
+    this.#offersModel = offersModel;
+    this.#destinationsModel = destinationsModel;
 
     this.#eventsModel.addObserver(this.#handleModelEvent);
     this.#filtersModel.addObserver(this.#handleModelEvent);
+
+    this.addObserver(this.#handleModelEvent);
+
+    Promise.all([
+      this.#eventsModel.init(),
+      this.#offersModel.init(),
+      this.#destinationsModel.init(),
+    ]).then(() => {
+      this._notify(UpdateTypes.INIT);
+    }).finally(() => {
+      render(this.addEventButtonComponent, document.querySelector('.page-body__container'));
+      this.#renderFilters();
+    });
   }
 
+  handleEventAdderButtonClick = () => {
+    this.#createEvent();
+    this.addEventButtonComponent.element.disabled = true;
+  };
+
+  addEventButtonComponent = new EventAdderView({
+    onClick: this.handleEventAdderButtonClick
+  });
+
+  onAddTaskClose = () => {
+    this.addEventButtonComponent.element.disabled = false;
+  };
+
   init() {
-    //this.#events = [...this.#eventsModel.events];
-    this.#renderFilters();
     this.#renderComponents();
   }
 
-  createEvent() {
+  #createEvent() {
     this.#currentSort = SORT_TYPES.DEFAULT;
     this.#filtersModel.setFilter(UpdateTypes.MAJOR, FilterTypes.ALL);
     this.#eventAdderPresenter.init();
@@ -73,13 +98,13 @@ export default class Presenter {
   }
 
   #renderEvent = (event) => {
-    const eventPresenter = new EventPresenter(
-      {
-        eventsContainer: this.#eventsContainer,
-        onEventChange: this.#handleViewAction,
-        onModeChange: this.#onModeChange
-      }
-    );
+    const eventPresenter = new EventPresenter({
+      offers: this.#offersModel.offers,
+      destinations: this.#destinationsModel.destinations,
+      eventsContainer: this.#eventsContainer,
+      onEventChange: this.#handleViewAction,
+      onModeChange: this.#onModeChange
+    });
     eventPresenter.init(event);
     this.#eventPresenters.set(event.id, eventPresenter);
   };
@@ -92,6 +117,15 @@ export default class Presenter {
   #renderEventsNone() {
     this.#eventsNoneComponent = new EventsNoneView(this.#filterType);
     render(this.#eventsNoneComponent, this.#eventsContainer);
+  }
+
+  #renderFilters() {
+    this.#filtersElement = new FiltersPresenter({
+      filtersContainer: this.#headerElement,
+      filtersModel: this.#filtersModel,
+      eventsModel: this.#eventsModel
+    });
+    this.#filtersElement.init();
   }
 
   #handleViewAction = (actionType, updateType, newEvent) => {
@@ -121,14 +155,33 @@ export default class Presenter {
         this.#clearComponents({ resetSortType: true });
         this.#renderComponents();
         break;
+      case UpdateTypes.INIT:
+        this.#eventAdderPresenter = new EventAdderPresenter({
+          eventsContainer: this.#eventsContainer,
+          onDataChange: this.#handleViewAction,
+          onDestroy: this.onAddTaskClose,
+          offers: this.#offersModel.offers,
+          destinations: this.#destinationsModel.destinations,
+        });
+        this.#isLoading = false;
+        this.#clearComponents();
+        this.#renderComponents();
+        break;
     }
   };
 
   #clearComponents({ resetSortType = false } = {}) {
-    this.#eventAdderPresenter.destroy();
+    if (this.#eventAdderPresenter) {
+      this.#eventAdderPresenter.destroy();
+    }
     this.#clearEvents();
     remove(this.#eventListContainer);
-    remove(this.#sorterComponent);
+    if (this.#sorterComponent) {
+      remove(this.#sorterComponent);
+    }
+    if (this.#loadingComponent) {
+      remove(this.#loadingComponent);
+    }
 
     if (this.#eventsNoneComponent) {
       remove(this.#eventsNoneComponent);
@@ -148,20 +201,16 @@ export default class Presenter {
     this.#renderComponents();
   };
 
+  #renderLoading() {
+    render(this.#loadingComponent, this.#eventsContainer);
+  }
+
   #renderSorter() {
     this.#sorterComponent = new SorterView({
+      currentSortType: this.#currentSort,
       onSort: this.#onSort
     });
     render(this.#sorterComponent, this.#eventsContainer);
-  }
-
-  #renderFilters() {
-    this.#filtersElement = new FiltersPresenter({
-      filtersContainer: this.#headerElement,
-      filtersModel: this.#filtersModel,
-      eventsModel: this.#eventsModel
-    });
-    this.#filtersElement.init();
   }
 
   #renderEventsContainer() {
@@ -171,7 +220,7 @@ export default class Presenter {
   #initEvents() {
     this.#renderEventsContainer();
 
-    if (this.#eventsModel.events.length === 0) {
+    if (this.#eventsModel.events.length === 0 && !this.#isLoading) {
       this.#renderEventsNone();
     } else {
       this.#renderEvents(this.events);
@@ -184,6 +233,10 @@ export default class Presenter {
   }
 
   #renderComponents() {
+    if (this.#isLoading) {
+      this.#renderLoading();
+      return;
+    }
     this.#renderSorter();
     this.#initEvents();
   }

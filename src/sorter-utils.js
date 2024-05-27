@@ -2,10 +2,8 @@ import dayjs from 'dayjs';
 
 const SORT_TYPES = {
   DEFAULT: 'default',
-  BY_PRICE: 'price',
   BY_TIME: 'time',
-  BY_OFFERS: 'offers',
-  BY_NAME: 'name',
+  BY_PRICE: 'price'
 };
 
 function getWeightForNullDate(dateA, dateB) {

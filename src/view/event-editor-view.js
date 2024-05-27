@@ -1,121 +1,92 @@
 import { humanizeTaskDueDate } from '../utils.js';
 import { DATE_FORMAT_EDIT} from '../const.js';
 import AbstractStatefulView from '../framework/view/abstract-stateful-view.js';
-import { DESTINATIONS } from '../const.js';
-import { OFFERS } from '../mock/offers-mock.js';
 import flatpickr from 'flatpickr';
 import 'flatpickr/dist/flatpickr.min.css';
 
 const createPicture = (picture) =>
   `
-  <img class="event__photo" src="${picture}.jpg" alt="Event photo">
+  <img class="event__photo" src="${picture.src}" alt="Event photo">
   `;
 
-const createPictures = (cityPhotosSrc) => Array.from(cityPhotosSrc, createPicture);
+const createPictures = (photos) => photos.map((photo) => createPicture(photo)).join('');
 
-const createOptions = (type) =>
-  `<div class="event__type-list">
-  <fieldset class="event__type-group">
-    <legend class="visually-hidden">Event type</legend>
-
-    <div class="event__type-item">
-      <input id="event-type-taxi-1" class="event__type-input  visually-hidden" type="radio" name="event-type" value="taxi" ${'taxi' === type ? 'checked' : ''}>
-      <label class="event__type-label  event__type-label--taxi" for="event-type-taxi-1">Taxi</label>
-    </div>
-
-    <div class="event__type-item">
-      <input id="event-type-bus-1" class="event__type-input  visually-hidden" type="radio" name="event-type" value="bus" ${'bus' === type ? 'checked' : ''}>
-      <label class="event__type-label  event__type-label--bus" for="event-type-bus-1">Bus</label>
-    </div>
-
-    <div class="event__type-item">
-      <input id="event-type-train-1" class="event__type-input  visually-hidden" type="radio" name="event-type" value="train" ${'train' === type ? 'checked' : ''}>
-      <label class="event__type-label  event__type-label--train" for="event-type-train-1">Train</label>
-    </div>
-
-    <div class="event__type-item">
-      <input id="event-type-ship-1" class="event__type-input  visually-hidden" type="radio" name="event-type" value="ship" ${'ship' === type ? 'checked' : ''}>
-      <label class="event__type-label  event__type-label--ship" for="event-type-ship-1">Ship</label>
-    </div>
-
-    <div class="event__type-item">
-      <input id="event-type-drive-1" class="event__type-input  visually-hidden" type="radio" name="event-type" value="drive" ${'drive' === type ? 'checked' : ''}>
-      <label class="event__type-label  event__type-label--drive" for="event-type-drive-1">Drive</label>
-    </div>
-
-    <div class="event__type-item">
-      <input id="event-type-flight-1" class="event__type-input  visually-hidden" type="radio" name="event-type" value="flight" ${'flight' === type ? 'checked' : ''}>
-      <label class="event__type-label  event__type-label--flight" for="event-type-flight-1">Flight</label>
-    </div>
-
-    <div class="event__type-item">
-      <input id="event-type-check-in-1" class="event__type-input  visually-hidden" type="radio" name="event-type" value="check-in" ${'check-in' === type ? 'checked' : ''}>
-      <label class="event__type-label  event__type-label--check-in" for="event-type-check-in-1">Check-in</label>
-    </div>
-
-    <div class="event__type-item">
-      <input id="event-type-sightseeing-1" class="event__type-input  visually-hidden" type="radio" name="event-type" value="sightseeing" ${'sightseeing' === type ? 'checked' : ''}>
-      <label class="event__type-label  event__type-label--sightseeing" for="event-type-sightseeing-1">Sightseeing</label>
-    </div>
-
-    <div class="event__type-item">
-      <input id="event-type-restaurant-1" class="event__type-input  visually-hidden" type="radio" name="event-type" value="restaurant" ${'restaurant' === type ? 'checked' : ''}>
-      <label class="event__type-label  event__type-label--restaurant" for="event-type-restaurant-1">Restaurant</label>
-    </div>
-  </fieldset>
+const createOption = (type, isActive) => `
+<div class="event__type-item">
+  <input id="event-type-${type}-1" class="event__type-input  visually-hidden" type="radio" name="event-type" value="${type}" ${isActive ? 'checked' : ''}>
+  <label class="event__type-label  event__type-label--${type}" for="event-type-${type}-1">${type}</label>
 </div>`;
 
-const createDistOpt = (destination) => {
-  let res = '';
-  DESTINATIONS.forEach((dest) => {
-    res += `<option ${destination === dest ? 'selected' : ''} value="${dest}">${dest}</option>`;
-  });
-  return res;
-};
+const createOptions = (currentType, allTypes) =>
+  (`<div class="event__type-list">
+    <fieldset class="event__type-group">
+      <legend class="visually-hidden">Event type</legend>
+      ${allTypes.map((type) =>
+      createOption(type, currentType === type)
+    ).join('')}
+    </fieldset>
+  </div>`);
 
-const createDestinations = (type, destination) =>
+const createDestination = (destination, isActive) => `<option ${isActive ? 'selected' : ''} value="${destination}">${destination}</option>`;
+
+const createDestinations = (curType, curDestination, allDestinations) =>
   `<div class="event__field-group  event__field-group--destination">
-  <label class="event__label  event__type-output" for="event-destination-1">
-    ${type}
-  </label>
+    <label class="event__label  event__type-output" for="event-destination-1">
+      ${curType}
+    </label>
 
-  <select class="event__input  event__input--destination" type="text" selected="${destination} id="destination-list-1">
-    ${createDistOpt(destination)}
+    <select class="event__input  event__input--destination" id="destination-list-1">
+      ${curDestination !== '' ?
+    allDestinations.map((destination) =>
+      createDestination(destination.name, destination.id === curDestination)
+    ).join('') :
+    allDestinations.map((destination) =>
+      createDestination(destination.name, false)
+    ).join('')
+}
+  }
+    </select>
+  </div>`;
 
-  </select>
-</div>`;
+const createOfferEdit = (offers = [], checkedOffers = []) =>
+  offers.map((offer) => {
+    const isChecked = checkedOffers.includes(offer.id) ? 'checked' : '';
+    return (
+      `<div class="event__offer-selector">
+        <input class="event__offer-checkbox  visually-hidden" id="event-offer-${offer.id}" type="checkbox" name="event-offer-${offer.id}" ${isChecked}>
+        <label class="event__offer-label" for="event-offer-${offer.id}">
+          <span class="event__offer-title">${offer.title}</span>
+          &plus;&euro;&nbsp;
+          <span class="event__offer-price">${offer.price}</span>
+        </label>
+      </div>`
+    );
+  }).join('');
 
-const createOfferEdit = (offers) => {
-  let res = '';
-  offers.forEach((offer) => {
-    res += `
-    <div class="event__offer-selector">
-      <input class="event__offer-checkbox  visually-hidden" id="${offer.id}-1" type="checkbox" offerId="${offer.id}" ${offer.checked ? 'checked' : ''}>
-      <label class="event__offer-label" for="${offer.id}-1">
-        <span class="event__offer-title">${offer.title}</span>
-        &plus;&euro;&nbsp;
-        <span class="event__offer-price">${offer.price}</span>
-      </label>
-    </div>
-    `;
-  });
-  return res;
+const createOffersEdit = (offers = [], checkedOffers = []) => {
+  if (!offers.length) {
+    return '';
+  }
+
+  return (
+    `<section class="event__section  event__section--offers">
+      <h3 class="event__section-title  event__section-title--offers">Offers</h3>
+      <div class="event__available-offers">
+        ${createOfferEdit(offers, checkedOffers)}
+      </div>
+    </section>`
+  );
 };
 
 
-const createOffersEdit = (offers) =>
-  `
-  <section class="event__section  event__section--offers">
-  <h3 class="event__section-title  event__section-title--offers">Offers</h3>
-    <div class="event__available-offers">
-      ${createOfferEdit(offers) }
-    </div>
-  </section>
-  `;
+const createEventEditorTemplate = (event, allOffers, allDestinations) =>{
+  const curDestinationData = allDestinations.find(({id}) => id === event.destination);
+  const {type, destination, basePrice, date, offers, isNew} = event;
+  const currentTypeOffers = allOffers[event.type];
 
-const createEventEditorTemplate = ({type, destination, basePrice, date, desctiption, cityPhotosSrc, offers}) =>
-  (
+  return (
     `
+
     <li><form class="event event--edit" action="#" method="post">
     <header class="event__header">
       <div class="event__type-wrapper">
@@ -125,11 +96,11 @@ const createEventEditorTemplate = ({type, destination, basePrice, date, desctipt
         </label>
         <input class="event__type-toggle  visually-hidden" id="event-type-toggle-1" type="checkbox">
 
-        ${createOptions(type)}
+        ${createOptions(type, Object.keys(allOffers))}
 
       </div>
 
-      ${createDestinations(type, destination)}
+      ${createDestinations(type, destination, allDestinations)}
 
       <div class="event__field-group  event__field-group--time">
         <label class="visually-hidden" for="event-start-time-1">From</label>
@@ -148,31 +119,30 @@ const createEventEditorTemplate = ({type, destination, basePrice, date, desctipt
       </div>
 
       <button class="event__save-btn  btn  btn--blue" type="submit">Save</button>
-      <button class="event__reset-btn" type="reset">Delete</button>
+      <button class="event__reset-btn" type="reset"?>${isNew ? 'Cancel' : 'Delete'}</button>
       <button class="event__rollup-btn" type="button">
         <span class="visually-hidden">Open event</span>
       </button>
     </header>
     <section class="event__details">
-      ${createOffersEdit(offers)}
+      ${createOffersEdit(currentTypeOffers, offers)}
+
 
       <section class="event__section  event__section--destination">
         <h3 class="event__section-title  event__section-title--destination">Destination</h3>
-        <p class="event__destination-description">${desctiption}</p>
+        <p class="event__destination-description">${destination ? curDestinationData.description : ''}</p>
 
         <div class="event__photos-container">
           <div class="event__photos-tape">
-            ${createPictures(cityPhotosSrc)}
+            ${createPictures(destination ? curDestinationData.pictures : [])}
           </div>
         </div>
       </section>
     </section>
     </form>
-    </li>
-
-
-    `
+    </li>`
   );
+};
 
 export default class EventEditorView extends AbstractStatefulView{
   #onEventChange;
@@ -182,19 +152,22 @@ export default class EventEditorView extends AbstractStatefulView{
   #datepickerTo;
   #deleteEvent;
   #event;
-  constructor({event, onSubmit, deleteEvent}) {
+  #isCreateNewEvent;
+  #allOffers;
+  #allDestinations;
+  constructor({event, onSubmit, deleteEvent, offers, destinations}) {
     super();
     this._setState(EventEditorView.parseEventToState(event));
     this.#onSubmit = onSubmit;
-
-    this._restoreHandlers();
-
     this.#event = event;
     this.#deleteEvent = deleteEvent;
+    this.#allOffers = offers;
+    this.#allDestinations = destinations;
+    this._restoreHandlers();
   }
 
   get template() {
-    return createEventEditorTemplate(this._state);
+    return createEventEditorTemplate(this._state, this.#allOffers, this.#allDestinations);
   }
 
   removeElement() {
@@ -268,32 +241,28 @@ export default class EventEditorView extends AbstractStatefulView{
   }
 
   #onOffersChange = (evt) => {
-    const offerId = evt.target.getAttribute('offerId');
-    const curOffer = this._state.offers.find((offer) => offer.id === offerId);
+    const offerId = evt.target.name;
 
-    if (curOffer) {
-      curOffer.checked = evt.target.checked;
-    }
+    const newOffers = this._state.offers.includes(offerId) ?
+      this._state.offers.filter((offer) => offer !== offerId) :
+      [...this._state.offers, offerId];
 
     this.updateElement({
-      offers: this._state.offers,
+      offers: newOffers,
     });
   };
 
   #onTypeChange = (evt) => {
     evt.preventDefault();
-    const newType = evt.target.value;
-    const newOffers = OFFERS[newType.toLowerCase()];
-
     this.updateElement({
-      type: newType,
-      offers: newOffers
+      type: evt.target.value,
+      offers: []
     });
   };
 
   reset(event) {
     this.updateElement(
-      EventEditorView.parseEventToState(event),
+      EventEditorView.parseEventToState(event, this.#isCreateNewEvent),
     );
   }
 
@@ -315,8 +284,9 @@ export default class EventEditorView extends AbstractStatefulView{
   };
 
   #onDestinationChange = (evt) => {
+    evt.preventDefault();
     this.updateElement({
-      destination: evt.target.value,
+      destination: this.#allDestinations.find(({name}) => name === evt.target.value).id,
     });
   };
 
@@ -329,11 +299,17 @@ export default class EventEditorView extends AbstractStatefulView{
     }
   };
 
-  static parseEventToState(event){
-    return {...event};
+  static parseEventToState(event, isNew){
+
+    return {
+      ...event,
+      isNew: isNew,
+    };
   }
 
   static parseStateToEvent(state){
-    return {...state};
+    const event = {...state };
+    delete event.isNew;
+    return event;
   }
 }

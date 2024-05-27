@@ -14,11 +14,15 @@ export default class EventPresenter {
   #onEventChange;
   #onModeChange;
   #mode = PRESENTER_MODES.DEFAULT;
+  #offers;
+  #destinations;
 
-  constructor({eventsContainer, onEventChange, onModeChange}){
+  constructor({offers, destinations, eventsContainer, onEventChange, onModeChange}){
     this.#eventsContainer = eventsContainer;
     this.#onEventChange = onEventChange;
     this.#onModeChange = onModeChange;
+    this.#offers = offers;
+    this.#destinations = destinations;
   }
 
   #onDocumentKeyDown = (evt) => {
@@ -33,20 +37,31 @@ export default class EventPresenter {
   init(event) {
     const prevEvent = this.#eventComponent;
     const prevEdit = this.#editorComponent;
-    this.#event = event;
+    const curTypeOffers = this.#offers[event.type];
+    const curTypeDestination = this.#destinations.find(({ id }) => id === event.destination);
+
+    this.#event = {
+      ...event,
+    };
+
     this.#eventComponent = new EventView(
       {
         event: this.#event,
+        offers: curTypeOffers,
+        destinations: curTypeDestination,
         onEventClick: () => {
           this.#replaceEventToEditor();
           document.addEventListener('keydown', this.#onDocumentKeyDown);
         },
-        onFavoriteClick: this.#onFavoriteClick
+        onFavoriteClick: this.#onFavoriteClick,
+        onSubmit: this.#onFormSubmit
       }
     );
 
     this.#editorComponent = new EventEditorView(
       {
+        offers: this.#offers,
+        destinations: this.#destinations,
         event: this.#event,
         onSubmit: this.#onFormSubmit,
         deleteEvent: this.#onDeleteEvent
