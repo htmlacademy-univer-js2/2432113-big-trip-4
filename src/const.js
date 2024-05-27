@@ -1,15 +1,15 @@
 const BLANK_EVENT_STRUCT =
 {
-  id: 1,
-  type: 'Chose',
-  destination: 'Choose',
+  id: '',
+  type: 'taxi',
+  destination: '',
   basePrice: 0,
   date: {
-    start: new Date(Date.UTC(2000, 1, 1, 0, 0, 0, 0)),
-    end: new Date(Date.UTC(2000, 1, 1, 1, 0, 0, ))
+    start: new Date().toISOString(),
+    end: new Date().toISOString()
   },
   offers: [],
-  desctiption:'Write',
+  desctiption:'',
   isFavorite: false,
   cityPhotosSrc: []
 };
@@ -73,6 +73,7 @@ const UpdateTypes = {
   PATCH: 'PATCH',
   MINOR: 'MINOR',
   MAJOR: 'MAJOR',
+  INIT: 'INIT'
 };
 
 const FilterTypes = {
@@ -82,8 +83,12 @@ const FilterTypes = {
   PAST: 'past',
 };
 
+const AUTHORIZATION = 'Basic salamaleykom';
+const END_POINT = 'https://21.objects.htmlacademy.pro/big-trip';
+
 export {DESTINATIONS, EVENT_TYPES, MOCK_DATES,
   PHOTOS_COUNT, MAX_OFFER_ID, MAX_EVENT_COUNT,
   BLANK_EVENT_STRUCT, MAX_EVENT_PRICE, DATE_FORMAT_DAY,
   DATE_FORMAT_EDIT, DATE_FORMAT_HOURS, PRESENTER_MODES,
-  UserActions, UpdateTypes, FilterTypes};
+  UserActions, UpdateTypes, FilterTypes,
+  AUTHORIZATION, END_POINT};
