@@ -12,6 +12,7 @@ import LoadingView from '../view/loading-view.js';
 import EventAdderView from '../view/event-adder-view.js';
 import Observable from '../framework/observable.js';
 import UiBlocker from '../framework/ui-blocker/ui-blocker.js';
+import TripInfoPresenter from './trip-info-presenter.js';
 
 export default class Presenter extends Observable {
   #eventListContainer = new EventListView();
@@ -30,6 +31,8 @@ export default class Presenter extends Observable {
   #isLoading = true;
   #offersModel;
   #destinationsModel;
+  #tripMain;
+  #tripInfoComponent;
 
   #uiBlocker = new UiBlocker({
     lowerLimit: TimeLimit.LOWER_LIMIT,
@@ -49,6 +52,7 @@ export default class Presenter extends Observable {
     filtersModel,
     offersModel,
     destinationsModel,
+    tripMain
   }) {
     super();
     this.#headerElement = headerElement;
@@ -57,6 +61,7 @@ export default class Presenter extends Observable {
     this.#filtersModel = filtersModel;
     this.#offersModel = offersModel;
     this.#destinationsModel = destinationsModel;
+    this.#tripMain = tripMain;
 
     this.#eventsModel.addObserver(this.#handleModelEvent);
     this.#filtersModel.addObserver(this.#handleModelEvent);
@@ -70,8 +75,9 @@ export default class Presenter extends Observable {
     ]).then(() => {
       this._notify(UpdateTypes.INIT);
     }).finally(() => {
-      render(this.addEventButtonComponent, document.querySelector('.page-body__container'));
+      this.#renderTripInfo();
       this.#renderFilters();
+      render(this.addEventButtonComponent, this.#tripMain);
     });
   }
 
@@ -115,6 +121,15 @@ export default class Presenter extends Observable {
     render(this.#eventsNoneComponent, this.#eventsContainer);
   }
 
+  #renderTripInfo(){
+    this.#tripInfoComponent = new TripInfoPresenter({
+      tripMain: this.#tripMain,
+      eventsModel: this.#eventsModel,
+      offersModel: this.#offersModel,
+      destinationsModel: this.#destinationsModel,
+    });
+  }
+
   #renderFilters() {
     this.#filtersElement = new FiltersPresenter({
       filtersContainer: this.#headerElement,
@@ -133,7 +148,7 @@ export default class Presenter extends Observable {
         try{
           await this.#eventsModel.updateEvent(updateType, newEvent);
         } catch(err){
-          this.#eventPresenters.get(newEvent.id).setAbording();
+          this.#eventPresenters.get(newEvent.id).setAborting();
         }
         break;
       case UserActions.ADD_EVENT:
@@ -141,7 +156,7 @@ export default class Presenter extends Observable {
         try{
           await this.#eventsModel.addEvent(updateType, newEvent);
         } catch (err){
-          this.#eventAdderPresenter.setAbording();
+          this.#eventAdderPresenter.setAborting();
         }
         break;
       case UserActions.DELETE_EVENT:
@@ -149,7 +164,7 @@ export default class Presenter extends Observable {
         try{
           await this.#eventsModel.deleteEvent(updateType, newEvent);
         } catch (err) {
-          this.eventPresenters.get(newEvent.id).setAbording();
+          this.#eventPresenters.get(newEvent.id).setAborting();
         }
         break;
     }
