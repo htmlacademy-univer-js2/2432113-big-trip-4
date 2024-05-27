@@ -3,7 +3,7 @@ import EventListView from '../view/event-list-view.js';
 import { remove, render } from '../framework/render.js';
 import EventsNoneView from '../view/events-none-view.js';
 import EventPresenter from './event-presenter.js';
-import { UpdateTypes, UserActions, FilterTypes } from '../const.js';
+import { UpdateTypes, UserActions, FilterTypes, TimeLimit } from '../const.js';
 import { getSortingAlgorythm, SORT_TYPES } from '../sorter-utils.js';
 import FiltersPresenter from './filters-presenter.js';
 import EventAdderPresenter from './event-adder-presenter.js';
@@ -11,6 +11,7 @@ import { filter } from '../utils.js';
 import LoadingView from '../view/loading-view.js';
 import EventAdderView from '../view/event-adder-view.js';
 import Observable from '../framework/observable.js';
+import UiBlocker from '../framework/ui-blocker/ui-blocker.js';
 
 export default class Presenter extends Observable {
   #eventListContainer = new EventListView();
@@ -21,7 +22,6 @@ export default class Presenter extends Observable {
   #eventPresenters = new Map();
   #currentSort = SORT_TYPES.DEFAULT;
   #sorterComponent;
-  #onAddEventClose;
   #filtersElement;
   #eventsNoneComponent;
   #filterType = FilterTypes.ALL;
@@ -31,12 +31,22 @@ export default class Presenter extends Observable {
   #offersModel;
   #destinationsModel;
 
+  #uiBlocker = new UiBlocker({
+    lowerLimit: TimeLimit.LOWER_LIMIT,
+    upperLimit: TimeLimit.UPPER_LIMIT
+  });
+
+  addEventButtonComponent = new EventAdderView({
+    onClick: () => {
+      this.#createEvent();
+      this.addEventButtonComponent.element.disabled = true;
+    }});
+
   constructor({
     headerElement,
     eventsContainer,
     eventsModel,
     filtersModel,
-    onAddEventClose,
     offersModel,
     destinationsModel,
   }) {
@@ -45,7 +55,6 @@ export default class Presenter extends Observable {
     this.#eventsModel = eventsModel;
     this.#eventsContainer = eventsContainer;
     this.#filtersModel = filtersModel;
-    this.#onAddEventClose = onAddEventClose;
     this.#offersModel = offersModel;
     this.#destinationsModel = destinationsModel;
 
@@ -65,19 +74,6 @@ export default class Presenter extends Observable {
       this.#renderFilters();
     });
   }
-
-  handleEventAdderButtonClick = () => {
-    this.#createEvent();
-    this.addEventButtonComponent.element.disabled = true;
-  };
-
-  addEventButtonComponent = new EventAdderView({
-    onClick: this.handleEventAdderButtonClick
-  });
-
-  onAddTaskClose = () => {
-    this.addEventButtonComponent.element.disabled = false;
-  };
 
   init() {
     this.#renderComponents();
@@ -128,18 +124,37 @@ export default class Presenter extends Observable {
     this.#filtersElement.init();
   }
 
-  #handleViewAction = (actionType, updateType, newEvent) => {
+  #handleViewAction = async (actionType, updateType, newEvent) => {
+    this.#uiBlocker.block();
     switch (actionType) {
       case UserActions.UPDATE_EVENT:
-        this.#eventsModel.updateEvent(updateType, newEvent);
+        //console.log(this.#eventPresenters.get(newEvent.id));
+        this.#eventPresenters.get(newEvent.id).setSaving();
+        try{
+          await this.#eventsModel.updateEvent(updateType, newEvent);
+        } catch(err){
+          this.#eventPresenters.get(newEvent.id).setAbording();
+        }
         break;
       case UserActions.ADD_EVENT:
-        this.#eventsModel.addEvent(updateType, newEvent);
+        this.#eventAdderPresenter.setSaving();
+        try{
+          await this.#eventsModel.addEvent(updateType, newEvent);
+        } catch (err){
+          this.#eventAdderPresenter.setAbording();
+        }
         break;
       case UserActions.DELETE_EVENT:
-        this.#eventsModel.deleteEvent(updateType, newEvent);
+        this.#eventPresenters.get(newEvent.id).setDeleting();
+        try{
+          await this.#eventsModel.deleteEvent(updateType, newEvent);
+        } catch (err) {
+          this.eventPresenters.get(newEvent.id).setAbording();
+        }
         break;
     }
+
+    this.#uiBlocker.unblock();
   };
 
   #handleModelEvent = (updateType, data) => {
@@ -159,7 +174,7 @@ export default class Presenter extends Observable {
         this.#eventAdderPresenter = new EventAdderPresenter({
           eventsContainer: this.#eventsContainer,
           onDataChange: this.#handleViewAction,
-          onDestroy: this.onAddTaskClose,
+          onDestroy: () => {this.addEventButtonComponent.element.disabled = false;},
           offers: this.#offersModel.offers,
           destinations: this.#destinationsModel.destinations,
         });

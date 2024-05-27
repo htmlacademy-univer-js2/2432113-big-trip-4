@@ -1,58 +1,15 @@
 const BLANK_EVENT_STRUCT =
 {
-  id: '',
-  type: 'taxi',
-  destination: '',
+  type: 'flight',
+  destination: null,
   basePrice: 0,
   date: {
-    start: new Date().toISOString(),
-    end: new Date().toISOString()
+    start: null,
+    end: null,
   },
-  offers: [],
-  desctiption:'',
-  isFavorite: false,
-  cityPhotosSrc: []
+  offers: [
+  ],
 };
-
-const DESTINATIONS =
-[
-  'Neftekamsk',
-  'Ufa',
-  'Kamen-na-Obi',
-  'Yekaterinburg',
-  'Ulan-Bator'
-];
-
-const EVENT_TYPES = [
-  'Taxi',
-  'Bus',
-  'Train',
-  'Ship',
-  'Drive',
-  'Flight',
-  'Check-in',
-  'Sightseeing',
-  'Restaurant'
-];
-const MOCK_DATES = [
-  {
-    start: new Date(Date.UTC(2024, 11, 29, 8, 0, 0, 0)),
-    end: new Date(Date.UTC(2024, 11, 29, 10, 0, 0, 0))
-  },
-  {
-    start: new Date(Date.UTC(2024, 4, 13, 18, 0, 0, 0)),
-    end: new Date(Date.UTC(2024, 4, 13, 20, 0, 0, 0))
-  },
-  {
-    start: new Date(Date.UTC(2024, 8, 5, 0, 0, 0, 0)),
-    end: new Date(Date.UTC(2024, 8, 5, 1, 0, 0, 0))
-  },
-];
-
-const MAX_EVENT_PRICE = 1000;
-const PHOTOS_COUNT = 5;
-const MAX_OFFER_ID = 10;
-const MAX_EVENT_COUNT = 4;
 
 const PRESENTER_MODES = {
   DEFAULT: 'DEFAULT',
@@ -62,6 +19,11 @@ const PRESENTER_MODES = {
 const DATE_FORMAT_EDIT = 'DD/MM/YY hh:mm';
 const DATE_FORMAT_DAY = 'MMM DD';
 const DATE_FORMAT_HOURS = 'hh-mm';
+
+const TimeLimit = {
+  LOWER_LIMIT: 350,
+  UPPER_LIMIT: 1000,
+};
 
 const UserActions = {
   UPDATE_EVENT: 'update',
@@ -86,9 +48,7 @@ const FilterTypes = {
 const AUTHORIZATION = 'Basic salamaleykom';
 const END_POINT = 'https://21.objects.htmlacademy.pro/big-trip';
 
-export {DESTINATIONS, EVENT_TYPES, MOCK_DATES,
-  PHOTOS_COUNT, MAX_OFFER_ID, MAX_EVENT_COUNT,
-  BLANK_EVENT_STRUCT, MAX_EVENT_PRICE, DATE_FORMAT_DAY,
+export { BLANK_EVENT_STRUCT, DATE_FORMAT_DAY,
   DATE_FORMAT_EDIT, DATE_FORMAT_HOURS, PRESENTER_MODES,
   UserActions, UpdateTypes, FilterTypes,
-  AUTHORIZATION, END_POINT};
+  AUTHORIZATION, END_POINT, TimeLimit};

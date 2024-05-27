@@ -1,6 +1,5 @@
 import {remove, render, RenderPosition} from '../framework/render.js';
 import EventEditorView from '../view/event-editor-view.js';
-import {nanoid} from 'nanoid';
 import {UserActions, UpdateTypes} from '../const.js';
 import { isEscKey } from '../utils.js';
 import { BLANK_EVENT_STRUCT } from '../const.js';
@@ -37,7 +36,7 @@ export default class EventAdderPresenter {
 
     render(this.#editorComponent, this.#eventsContainer);
 
-    document.addEventListener('keydown', this.#escKeyDownHandler, RenderPosition.BEFOREBEGIN);
+    document.addEventListener('keydown', this.#escKeyDownHandler, RenderPosition.AFTERBEGIN);
   }
 
   destroy() {
@@ -53,6 +52,26 @@ export default class EventAdderPresenter {
     document.removeEventListener('keydown', this.#escKeyDownHandler);
   }
 
+  setSaving() {
+    this.#editorComponent.updateElement({
+      isDisabled: true,
+      isSaving: true,
+    });
+  }
+
+  setAbording() {
+    const resetFormState = () => {
+      this.#editorComponent.updateElement({
+        isDisabled: false,
+        isSaving: false,
+        isDeleting: false,
+      });
+    };
+
+    this.#editorComponent.shake(resetFormState);
+  }
+
+
   #handleFormSubmit = (event) => {
     if(event === undefined){
       return;
@@ -60,7 +79,7 @@ export default class EventAdderPresenter {
     this.#onDataChange(
       UserActions.ADD_EVENT,
       UpdateTypes.MINOR,
-      {id: nanoid(), ...event},
+      {...event, isFavorite: false},
     );
     this.destroy();
   };

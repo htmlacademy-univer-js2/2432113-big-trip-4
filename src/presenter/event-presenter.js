@@ -85,6 +85,41 @@ export default class EventPresenter {
     remove(prevEdit);
   }
 
+  setSaving() {
+    if (this.#mode === PRESENTER_MODES.EDITING) {
+      this.#editorComponent.updateElement({
+        isDisabled: true,
+        isSaving: true,
+      });
+    }
+  }
+
+  setDeleting() {
+    if (this.#mode === PRESENTER_MODES.EDITING) {
+      this.#editorComponent.updateElement({
+        isDisabled: true,
+        isDeleting: true,
+      });
+    }
+  }
+
+  setAborting() {
+    if (this.#mode === PRESENTER_MODES.DEFAULT) {
+      this.#editorComponent.shake();
+      return;
+    }
+
+    const resetFormState = () => {
+      this.#editorComponent.updateElement({
+        isDisabled: false,
+        isSaving: false,
+        isDeleting: false,
+      });
+    };
+
+    this.#editorComponent.shake(resetFormState);
+  }
+
   resetView(){
     if (this.#mode !== PRESENTER_MODES.DEFAULT){
       this.#replaceEditorToEvent();
