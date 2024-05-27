@@ -59,7 +59,7 @@ export default class EventAdderPresenter {
     });
   }
 
-  setAbording() {
+  setAborting() {
     const resetFormState = () => {
       this.#editorComponent.updateElement({
         isDisabled: false,
