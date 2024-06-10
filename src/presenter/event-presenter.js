@@ -1,7 +1,7 @@
 import { render, replace, remove } from '../framework/render';
 import EventEditorView from '../view/event-editor-view';
 import EventView from '../view/event-view';
-import {UserActions, UpdateTypes, PRESENTER_MODES } from '../const';
+import {UserActions, UpdateTypes, PresenterModes } from '../const';
 import { isEscKey } from '../utils';
 
 export default class EventPresenter {
@@ -13,7 +13,7 @@ export default class EventPresenter {
   #eventsContainer;
   #onEventChange;
   #onModeChange;
-  #mode = PRESENTER_MODES.DEFAULT;
+  #mode = PresenterModes.DEFAULT;
   #offers;
   #destinations;
 
@@ -64,7 +64,8 @@ export default class EventPresenter {
         destinations: this.#destinations,
         event: this.#event,
         onSubmit: this.#onFormSubmit,
-        deleteEvent: this.#onDeleteEvent
+        deleteEvent: this.#onDeleteEvent,
+        isNew: false
       },
     );
 
@@ -73,11 +74,11 @@ export default class EventPresenter {
       return;
     }
 
-    if(this.#mode === PRESENTER_MODES.DEFAULT){
+    if(this.#mode === PresenterModes.DEFAULT){
       replace(this.#eventComponent, prevEvent);
     }
 
-    if(this.#mode === PRESENTER_MODES.EDITING){
+    if(this.#mode === PresenterModes.EDITING){
       replace(this.#editorComponent, prevEdit);
     }
 
@@ -86,7 +87,7 @@ export default class EventPresenter {
   }
 
   setSaving() {
-    if (this.#mode === PRESENTER_MODES.EDITING) {
+    if (this.#mode === PresenterModes.EDITING) {
       this.#editorComponent.updateElement({
         isDisabled: true,
         isSaving: true,
@@ -95,7 +96,7 @@ export default class EventPresenter {
   }
 
   setDeleting() {
-    if (this.#mode === PRESENTER_MODES.EDITING) {
+    if (this.#mode === PresenterModes.EDITING) {
       this.#editorComponent.updateElement({
         isDisabled: true,
         isDeleting: true,
@@ -104,8 +105,8 @@ export default class EventPresenter {
   }
 
   setAborting() {
-    if (this.#mode === PRESENTER_MODES.DEFAULT) {
-      this.#editorComponent.shake();
+    if (this.#mode === PresenterModes.DEFAULT) {
+      this.#eventComponent.shake();
       return;
     }
 
@@ -121,7 +122,7 @@ export default class EventPresenter {
   }
 
   resetView(){
-    if (this.#mode !== PRESENTER_MODES.DEFAULT){
+    if (this.#mode !== PresenterModes.DEFAULT){
       this.#replaceEditorToEvent();
     }
   }
@@ -135,13 +136,13 @@ export default class EventPresenter {
     replace(this.#editorComponent, this.#eventComponent);
     document.addEventListener('keydown', this.#onDocumentKeyDown);
     this.#onModeChange();
-    this.#mode = PRESENTER_MODES.EDITING;
+    this.#mode = PresenterModes.EDITING;
   }
 
   #replaceEditorToEvent () {
     replace(this.#eventComponent, this.#editorComponent);
     document.addEventListener('keydown', this.#onDocumentKeyDown);
-    this.#mode = PRESENTER_MODES.DEFAULT;
+    this.#mode = PresenterModes.DEFAULT;
   }
 
   #onFavoriteClick = ( ) => {

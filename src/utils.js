@@ -11,34 +11,33 @@ const humanizeTaskDueDate = (dueDate, format) => dueDate ? dayjs(dueDate).format
 
 const countDuration = (dateStart, dateEnd) => {
   dayjs.extend(duration);
-  const diff = dayjs.duration(dayjs(dateEnd).diff(dayjs(dateStart)));
+  const diff = dayjs.duration(dayjs(dateEnd).diff(dateStart));
 
-  const minutes = diff.minutes();
-  const hours = diff.hours();
-  const days = diff.days();
+  const padZero = (num) => (num < 10 ? `0${num}` : num);
 
   if (diff.asHours() < 1) {
-    return `${minutes}M`;
+    return `${padZero(diff.minutes())}m`;
   } else if (diff.asDays() < 1) {
-    return `${hours}H ${minutes}M`;
+    return `${padZero(diff.hours())}h ${padZero(diff.minutes())}m`;
   } else {
-    return `${days}D ${hours}H ${minutes}M`;
+    const totalDays = diff.years ? diff.years() * 365 + diff.days() : diff.days;
+    return `${padZero(totalDays)}d ${padZero(diff.hours())}h ${padZero(diff.minutes())}m`;
   }
 };
 
-const isEventPresent = (point) => {
+const isEventPresent = (event) => {
   const now = dayjs();
   return (
-    dayjs(point.date.start).isSame(now) ||
-    (dayjs(point.date.start).isBefore(now) && dayjs(point.date.end).isAfter(now))
+    dayjs(event.date.start).isSame(now) ||
+    (dayjs(event.date.start).isBefore(now) && dayjs(event.date.end).isAfter(now))
   );
 };
 
 const filter = {
   'everything': (data) => [...data],
-  'future': (data) => data.filter((point) => dayjs(point.date.start).isAfter(dayjs())),
+  'future': (data) => data.filter((event) => dayjs(event.date.start).isAfter(dayjs())),
   'present': (data) => data.filter(isEventPresent),
-  'past': (data) => data.filter((point) => dayjs(point.date.end).isBefore(dayjs())),
+  'past': (data) => data.filter((event) => dayjs(event.date.end).isBefore(dayjs())),
 };
 
 const updateItem = (items, update) => {

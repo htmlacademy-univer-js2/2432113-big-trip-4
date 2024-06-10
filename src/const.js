@@ -11,13 +11,13 @@ const BLANK_EVENT_STRUCT =
   ],
 };
 
-const PRESENTER_MODES = {
+const PresenterModes = {
   DEFAULT: 'DEFAULT',
   EDITING: 'EDITING',
 };
 
 const DATE_FORMAT_EDIT = 'DD/MM/YY hh:mm';
-const DATE_FORMAT_DAY = 'MMM DD';
+const DATE_FORMAT_DAY = 'DD MMM';
 const DATE_FORMAT_HOURS = 'hh-mm';
 
 const TimeLimit = {
@@ -49,6 +49,6 @@ const AUTHORIZATION = 'Basic salamaleykom';
 const END_POINT = 'https://21.objects.htmlacademy.pro/big-trip';
 
 export { BLANK_EVENT_STRUCT, DATE_FORMAT_DAY,
-  DATE_FORMAT_EDIT, DATE_FORMAT_HOURS, PRESENTER_MODES,
+  DATE_FORMAT_EDIT, DATE_FORMAT_HOURS, PresenterModes,
   UserActions, UpdateTypes, FilterTypes,
   AUTHORIZATION, END_POINT, TimeLimit};

@@ -10,7 +10,7 @@ import DestinationsApiService from './api-service/destinations-api-service.js';
 
 const pageBody = document.querySelector('.page-body');
 const eventsContainer = pageBody.querySelector('.trip-events');
-const headerElement = pageBody.querySelector('.trip-controls');
+const headerElement = pageBody.querySelector('.trip-main');
 const tripMain = pageBody.querySelector('.trip-main');
 
 const events = new EventsModel({

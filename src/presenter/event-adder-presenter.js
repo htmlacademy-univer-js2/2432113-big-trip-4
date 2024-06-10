@@ -31,12 +31,13 @@ export default class EventAdderPresenter {
       onSubmit: this.#handleFormSubmit,
       deleteEvent: this.#handleDeleteClick,
       offers: this.#allOffers,
-      destinations: this.#allDestinations
+      destinations: this.#allDestinations,
+      isNew: true
     });
 
-    render(this.#editorComponent, this.#eventsContainer);
+    render(this.#editorComponent, this.#eventsContainer, RenderPosition.AFTERBEGIN);
 
-    document.addEventListener('keydown', this.#escKeyDownHandler, RenderPosition.AFTERBEGIN);
+    document.addEventListener('keydown', this.#escKeyDownHandler);
   }
 
   destroy() {
@@ -81,7 +82,6 @@ export default class EventAdderPresenter {
       UpdateTypes.MINOR,
       {...event, isFavorite: false},
     );
-    this.destroy();
   };
 
   #handleDeleteClick = () => {
