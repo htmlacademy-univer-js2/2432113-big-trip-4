@@ -39,14 +39,6 @@ export default class EventsModel extends Observable{
     return adapted;
   }
 
-  #findEventIndex(eventId) {
-    const index = this.#events.findIndex((event) => event.id === eventId);
-    if (index === -1) {
-      throw new Error('Can\'t find event');
-    }
-    return index;
-  }
-
   async updateEvent (updateType, newEvent) {
     const index = this.#events.findIndex((event) => event.id === newEvent.id);
 
@@ -83,7 +75,7 @@ export default class EventsModel extends Observable{
     }
   }
 
-  async deletePoint(updateType, newEvent){
+  async deleteEvent(updateType, newEvent){
 
     const index = this.#events.findIndex((event) => event.id === newEvent.id);
 

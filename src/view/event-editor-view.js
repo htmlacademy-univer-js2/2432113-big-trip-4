@@ -3,6 +3,7 @@ import { DATE_FORMAT_EDIT} from '../const.js';
 import AbstractStatefulView from '../framework/view/abstract-stateful-view.js';
 import flatpickr from 'flatpickr';
 import 'flatpickr/dist/flatpickr.min.css';
+import dayjs from 'dayjs';
 
 const createPicture = (picture) =>
   `
@@ -44,13 +45,11 @@ const createDestinations = (curType, curDestination, allDestinations, isDisabled
       createDestination(destination.name, false)
     ).join('')
 }
-  }
     </select>
   </div>`;
 
 const createOfferEdit = (currentTypeOffers, offers, isDisabled) => {
   let res = '';
-
 
   currentTypeOffers.forEach((offer) => {
     let isActive = false;
@@ -93,15 +92,31 @@ const createButtons = (isNew, isDisabled, isDeleting, isSaving) =>{
   `);
 };
 
+const createDestinationInfo = (curDestinationData) => {
+  if (!curDestinationData.description & curDestinationData.pictures.length < 1){
+    return '';
+  }
+  return `<section class="event__section  event__section--destination">
+        <h3 class="event__section-title  event__section-title--destination">Destination</h3>
+        <p class="event__destination-description">${curDestinationData.description}</p>
+
+        <div class="event__photos-container">
+          <div class="event__photos-tape">
+            ${createPictures(curDestinationData.pictures)}
+          </div>
+        </div>
+      </section>`;
+};
+
 const createEventEditorTemplate = (event, allOffers, allDestinations) =>{
-  //console.log(event);
   const curDestinationData = allDestinations.find(({id}) => id === event.destination);
   const {type, destination, basePrice, date, offers, isNew, isDeleting, isSaving, isDisabled} = event;
   const currentTypeOffers = allOffers[event.type];
 
   return (
     `
-    <li><form class="event event--edit" action="#" method="post">
+    <li class="trip-events__item">
+    <form class="event event--edit" action="#" method="post">
     <header class="event__header">
       <div class="event__type-wrapper">
         <label class="event__type  event__type-btn" for="event-type-toggle-1">
@@ -136,19 +151,10 @@ const createEventEditorTemplate = (event, allOffers, allDestinations) =>{
       </button>
     </header>
     <section class="event__details">
-      ${createOffersEdit(currentTypeOffers, offers, isDisabled)}
+      ${currentTypeOffers.length > 0 ? createOffersEdit(currentTypeOffers, offers, isDisabled) : ''}
 
+      ${curDestinationData ? createDestinationInfo(curDestinationData) : ''}
 
-      <section class="event__section  event__section--destination">
-        <h3 class="event__section-title  event__section-title--destination">Destination</h3>
-        <p class="event__destination-description">${destination ? curDestinationData.description : ''}</p>
-
-        <div class="event__photos-container">
-          <div class="event__photos-tape">
-            ${createPictures(destination ? curDestinationData.pictures : [])}
-          </div>
-        </div>
-      </section>
     </section>
     </form>
     </li>
@@ -156,24 +162,24 @@ const createEventEditorTemplate = (event, allOffers, allDestinations) =>{
   );};
 
 export default class EventEditorView extends AbstractStatefulView{
-  #onEventChange;
-  #eventEditClick;
   #onSubmit;
   #datepickerFrom;
   #datepickerTo;
   #deleteEvent;
   #event;
-  #isCreateNewEvent;
+  #isCreateNewEvent ;
   #allOffers;
   #allDestinations;
-  constructor({event, onSubmit, deleteEvent, offers, destinations}) {
+  constructor({event, onSubmit, deleteEvent, offers, destinations, isNew}) {
     super();
-    this._setState(EventEditorView.parseEventToState(event));
+    this._setState(EventEditorView.parseEventToState(event, isNew));
     this.#onSubmit = onSubmit;
     this.#event = event;
     this.#deleteEvent = deleteEvent;
     this.#allOffers = offers;
     this.#allDestinations = destinations;
+
+    this.#isCreateNewEvent = isNew;
     this._restoreHandlers();
   }
 
@@ -218,16 +224,19 @@ export default class EventEditorView extends AbstractStatefulView{
   #setDatepickers() {
     const timeInputs = this.element.querySelectorAll('.event__input--time');
     if (this._state.date) {
-      this.#datepickerFrom = this.#createDatepicker(timeInputs[0], this.#onDateChangeFrom);
-      this.#datepickerTo = this.#createDatepicker(timeInputs[1], this.#onDateChangeTo);
+      this.#datepickerFrom = this.#createDatepicker(timeInputs[0], this.#onDateChangeFrom, this._state.date.start);
+      this.#datepickerTo = this.#createDatepicker(timeInputs[1], this.#onDateChangeTo, this._state.date.end);
     }
   }
 
-  #createDatepicker(element, onChange) {
+  #createDatepicker(element, onChange, stateTime) {
     return flatpickr(element, {
       enableTime: true,
+      // это свойство флэтпикера, его в camelcase я не превращу :/
+      // eslint-disable-next-line camelcase
+      time_24hr: true,
       dateFormat: 'd/m/y H:i',
-      defaultDate: '',
+      defaultDate: stateTime ? dayjs(stateTime).format('DD/MM/YY HH:mm') : '',
       onChange: onChange,
     });
   }
@@ -236,7 +245,6 @@ export default class EventEditorView extends AbstractStatefulView{
     const handlers = [
       { selector: '.event__input--price', event: 'input', handler: this.#onPriceInput },
       { selector: '.event__reset-btn', event: 'click', handler: this.#onDeleteButtonClick },
-      //{ selector: '.event__rollup-btn', event: 'click', handler: this.#onEditorClose },
       { selector: '.event__input--destination', event: 'change', handler: this.#onDestinationChange },
       { selector: '.event__type-group', event: 'input', handler: this.#onTypeChange },
       { selector: '.event__offer-checkbox', event: 'change', handler: this.#onOffersChange }
@@ -296,7 +304,6 @@ export default class EventEditorView extends AbstractStatefulView{
   #onSaving = (evt) => {
     evt.preventDefault();
     this.#onSubmit(EventEditorView.parseStateToEvent(this._state));
-    //this.#onEditorClose(evt);
   };
 
   #onDestinationChange = (evt) => {
