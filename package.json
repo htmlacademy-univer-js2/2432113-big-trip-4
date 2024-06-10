@@ -34,6 +34,6 @@
   },
   "dependencies": {
     "dayjs": "1.11.10",
-    "flatpickr": "^4.6.13"
+    "flatpickr": "4.6.13"
   }
 }
