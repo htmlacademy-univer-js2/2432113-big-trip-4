@@ -1,6 +1,6 @@
 import dayjs from 'dayjs';
 
-const SORT_TYPES = {
+const SortTypes = {
   DEFAULT: 'default',
   BY_TIME: 'time',
   BY_PRICE: 'price'
@@ -56,17 +56,17 @@ const sortByDefault = (event1, event2) => {
 
 const getSortingAlgorythm = (sortType) => {
   switch (sortType) {
-    case SORT_TYPES.BY_TIME:
+    case SortTypes.BY_TIME:
       return sortByTime;
-    case SORT_TYPES.BY_NAME:
+    case SortTypes.BY_NAME:
       return sortByName;
-    case SORT_TYPES.BY_PRICE:
+    case SortTypes.BY_PRICE:
       return sortByPrice;
-    case SORT_TYPES.BY_OFFERS:
+    case SortTypes.BY_OFFERS:
       return sortByOffers;
-    case SORT_TYPES.DEFAULT:
+    case SortTypes.DEFAULT:
       return sortByDefault;
   }
 };
 
-export {getSortingAlgorythm, SORT_TYPES};
+export {getSortingAlgorythm, SortTypes};

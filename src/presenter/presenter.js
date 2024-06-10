@@ -4,7 +4,7 @@ import { remove, render } from '../framework/render.js';
 import EventsNoneView from '../view/events-none-view.js';
 import EventPresenter from './event-presenter.js';
 import { UpdateTypes, UserActions, FilterTypes, TimeLimit } from '../const.js';
-import { getSortingAlgorythm, SORT_TYPES } from '../sorter-utils.js';
+import { getSortingAlgorythm, SortTypes } from '../sorter-utils.js';
 import FiltersPresenter from './filters-presenter.js';
 import EventAdderPresenter from './event-adder-presenter.js';
 import { filter } from '../utils.js';
@@ -12,6 +12,7 @@ import LoadingView from '../view/loading-view.js';
 import EventAdderView from '../view/event-adder-view.js';
 import Observable from '../framework/observable.js';
 import UiBlocker from '../framework/ui-blocker/ui-blocker.js';
+import TripInfoPresenter from './trip-info-presenter.js';
 
 export default class Presenter extends Observable {
   #eventListContainer = new EventListView();
@@ -20,7 +21,7 @@ export default class Presenter extends Observable {
   #eventsContainer;
   #filtersModel;
   #eventPresenters = new Map();
-  #currentSort = SORT_TYPES.DEFAULT;
+  #currentSort = SortTypes.DEFAULT;
   #sorterComponent;
   #filtersElement;
   #eventsNoneComponent;
@@ -30,6 +31,8 @@ export default class Presenter extends Observable {
   #isLoading = true;
   #offersModel;
   #destinationsModel;
+  #tripMain;
+  #tripInfoPresenter;
 
   #uiBlocker = new UiBlocker({
     lowerLimit: TimeLimit.LOWER_LIMIT,
@@ -40,6 +43,9 @@ export default class Presenter extends Observable {
     onClick: () => {
       this.#createEvent();
       this.addEventButtonComponent.element.disabled = true;
+      if(this.#eventsNoneComponent){
+        remove(this.#eventsNoneComponent);
+      }
     }});
 
   constructor({
@@ -49,6 +55,7 @@ export default class Presenter extends Observable {
     filtersModel,
     offersModel,
     destinationsModel,
+    tripMain
   }) {
     super();
     this.#headerElement = headerElement;
@@ -57,6 +64,7 @@ export default class Presenter extends Observable {
     this.#filtersModel = filtersModel;
     this.#offersModel = offersModel;
     this.#destinationsModel = destinationsModel;
+    this.#tripMain = tripMain;
 
     this.#eventsModel.addObserver(this.#handleModelEvent);
     this.#filtersModel.addObserver(this.#handleModelEvent);
@@ -70,8 +78,8 @@ export default class Presenter extends Observable {
     ]).then(() => {
       this._notify(UpdateTypes.INIT);
     }).finally(() => {
-      render(this.addEventButtonComponent, document.querySelector('.page-body__container'));
       this.#renderFilters();
+      render(this.addEventButtonComponent, this.#tripMain);
     });
   }
 
@@ -80,8 +88,9 @@ export default class Presenter extends Observable {
   }
 
   #createEvent() {
-    this.#currentSort = SORT_TYPES.DEFAULT;
+    this.#currentSort = SortTypes.DEFAULT;
     this.#filtersModel.setFilter(UpdateTypes.MAJOR, FilterTypes.ALL);
+
     this.#eventAdderPresenter.init();
   }
 
@@ -97,7 +106,7 @@ export default class Presenter extends Observable {
     const eventPresenter = new EventPresenter({
       offers: this.#offersModel.offers,
       destinations: this.#destinationsModel.destinations,
-      eventsContainer: this.#eventsContainer,
+      eventsContainer: this.#eventListContainer.element,
       onEventChange: this.#handleViewAction,
       onModeChange: this.#onModeChange
     });
@@ -113,6 +122,15 @@ export default class Presenter extends Observable {
   #renderEventsNone() {
     this.#eventsNoneComponent = new EventsNoneView(this.#filterType);
     render(this.#eventsNoneComponent, this.#eventsContainer);
+  }
+
+  #renderTripInfo(){
+    this.#tripInfoPresenter = new TripInfoPresenter({
+      tripMain: this.#tripMain,
+      offersModel: this.#offersModel,
+      destinationsModel: this.#destinationsModel,
+    });
+    //this.#tripInfoPresenter.init(this.events);
   }
 
   #renderFilters() {
@@ -133,7 +151,7 @@ export default class Presenter extends Observable {
         try{
           await this.#eventsModel.updateEvent(updateType, newEvent);
         } catch(err){
-          this.#eventPresenters.get(newEvent.id).setAbording();
+          this.#eventPresenters.get(newEvent.id).setAborting();
         }
         break;
       case UserActions.ADD_EVENT:
@@ -141,7 +159,7 @@ export default class Presenter extends Observable {
         try{
           await this.#eventsModel.addEvent(updateType, newEvent);
         } catch (err){
-          this.#eventAdderPresenter.setAbording();
+          this.#eventAdderPresenter.setAborting();
         }
         break;
       case UserActions.DELETE_EVENT:
@@ -149,7 +167,7 @@ export default class Presenter extends Observable {
         try{
           await this.#eventsModel.deleteEvent(updateType, newEvent);
         } catch (err) {
-          this.eventPresenters.get(newEvent.id).setAbording();
+          this.#eventPresenters.get(newEvent.id).setAborting();
         }
         break;
     }
@@ -177,6 +195,7 @@ export default class Presenter extends Observable {
           onDestroy: () => {this.addEventButtonComponent.element.disabled = false;},
           offers: this.#offersModel.offers,
           destinations: this.#destinationsModel.destinations,
+          isNew: false
         });
         this.#isLoading = false;
         this.#clearComponents();
@@ -202,7 +221,7 @@ export default class Presenter extends Observable {
       remove(this.#eventsNoneComponent);
     }
     if (resetSortType) {
-      this.#currentSort = SORT_TYPES.DEFAULT;
+      this.#currentSort = SortTypes.DEFAULT;
     }
   }
 
@@ -252,6 +271,12 @@ export default class Presenter extends Observable {
       this.#renderLoading();
       return;
     }
+
+    if(!this.#tripInfoPresenter){
+      this.#renderTripInfo();
+    }
+
+    this.#tripInfoPresenter.init(this.events);
     this.#renderSorter();
     this.#initEvents();
   }
