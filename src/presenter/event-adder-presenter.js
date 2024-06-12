@@ -2,7 +2,7 @@ import {remove, render, RenderPosition} from '../framework/render.js';
 import EventEditorView from '../view/event-editor-view.js';
 import {UserActions, UpdateTypes} from '../const.js';
 import { isEscKey } from '../utils.js';
-import { BLANK_EVENT_STRUCT } from '../const.js';
+import { blankEvenStruct } from '../const.js';
 
 export default class EventAdderPresenter {
   #eventsContainer = null;
@@ -27,7 +27,10 @@ export default class EventAdderPresenter {
     }
 
     this.#editorComponent = new EventEditorView({
-      event: BLANK_EVENT_STRUCT,
+      //теперь destination не null и выбран заранее из полученного с сервера списка
+      event: {...blankEvenStruct,
+        destination: this.#allDestinations[0].id
+      },
       onSubmit: this.#handleFormSubmit,
       deleteEvent: this.#handleDeleteClick,
       offers: this.#allOffers,
@@ -41,7 +44,7 @@ export default class EventAdderPresenter {
   }
 
   destroy() {
-    if (this.#editorComponent === null) {
+    if (!this.#editorComponent) {
       return;
     }
 
@@ -72,11 +75,7 @@ export default class EventAdderPresenter {
     this.#editorComponent.shake(resetFormState);
   }
 
-
   #handleFormSubmit = (event) => {
-    if(event === undefined){
-      return;
-    }
     this.#onDataChange(
       UserActions.ADD_EVENT,
       UpdateTypes.MINOR,

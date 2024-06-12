@@ -41,13 +41,12 @@ export default class FiltersPresenter {
       onFilterTypeChange: this.#handleFilterTypeChange
     });
 
-    if (prevFiltersComponent === null) {
+    if (!prevFiltersComponent) {
       render(this.#filtersComponent, this.#filtersContainer);
-      return;
+    } else {
+      replace(this.#filtersComponent, prevFiltersComponent);
+      remove(prevFiltersComponent);
     }
-
-    replace(this.#filtersComponent, prevFiltersComponent);
-    remove(prevFiltersComponent);
   }
 
   #handleModelEvent = () => {

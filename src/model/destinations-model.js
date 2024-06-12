@@ -11,13 +11,10 @@ export default class DestinationsModel {
   }
 
   async init() {
-
     try {
       const destinations = await this.apiService.destinations;
       this.#destinations = destinations;
-
     } catch(err) {
-
       this.#destinations = [];
     }
   }
