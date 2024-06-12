@@ -135,7 +135,7 @@ const createEventEditorTemplate = (event, allOffers, allDestinations) =>{
         <label class="visually-hidden" for="event-start-time-1">From</label>
         <input  class="event__input  event__input--time" id="event-start-time-1" type="text" name="event-start-time" value="${humanizeTaskDueDate(date.start, DATE_FORMAT_EDIT)}" ${isDisabled ? 'disabled' : ''}>
         &mdash;
-        <label claыss="visually-hidden" for="event-end-time-1">To</label>
+        <label class="visually-hidden" for="event-end-time-1">To</label>
         <input class="event__input  event__input--time" id="event-end-time-1" type="text" name="event-end-time" value="${humanizeTaskDueDate(date.end, DATE_FORMAT_EDIT)}" ${isDisabled ? 'disabled' : ''}>
       </div>
 
@@ -204,7 +204,7 @@ export default class EventEditorView extends AbstractStatefulView{
   }
 
   #onDateChangeFrom = ([userDate]) => {
-    this.updateElement({
+    this._setState({
       date: {
         start: userDate,
         end: this._state.date.end,
@@ -213,7 +213,7 @@ export default class EventEditorView extends AbstractStatefulView{
   };
 
   #onDateChangeTo = ([userDate]) => {
-    this.updateElement({
+    this._setState({
       date: {
         start: this._state.date.start,
         end: userDate,
@@ -313,10 +313,11 @@ export default class EventEditorView extends AbstractStatefulView{
     });
   };
 
+  //пофиксил (нужны были setState, а не полные апдейты)
   #onPriceInput = (evt) => {
     const regex = /^\d{1,6}$/;
     if (regex.test(evt.target.value)) {
-      this.updateElement({
+      this._setState({
         basePrice: evt.target.value,
       });
     }
