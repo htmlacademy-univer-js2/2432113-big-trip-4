@@ -69,7 +69,7 @@ export default class EventPresenter {
       },
     );
 
-    if(prevEvent === undefined || prevEdit === undefined){
+    if(!prevEvent || !prevEdit){
       render(this.#eventComponent, this.#eventsContainer);
       return;
     }
@@ -141,7 +141,8 @@ export default class EventPresenter {
 
   #replaceEditorToEvent () {
     replace(this.#eventComponent, this.#editorComponent);
-    document.addEventListener('keydown', this.#onDocumentKeyDown);
+    //просто спутал remove и add, исправлено (был addEvent)
+    document.removeEventListener('keydown', this.#onDocumentKeyDown);
     this.#mode = PresenterModes.DEFAULT;
   }
 
@@ -154,7 +155,7 @@ export default class EventPresenter {
   };
 
   #onFormSubmit = (update) => {
-    if(update === undefined){
+    if(!update){
       this.#editorComponent.reset(this.#event);
       this.#replaceEditorToEvent();
       return;

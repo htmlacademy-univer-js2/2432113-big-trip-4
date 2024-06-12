@@ -6,14 +6,15 @@ const SortTypes = {
   BY_PRICE: 'price'
 };
 
-function getWeightForNullDate(dateA, dateB) {
-  if (dateA === null && dateB === null) {
+//пусть будет
+function compareNullDate(dateA, dateB) {
+  if (!dateA && !dateB) {
     return 0;
   }
-  if (dateA === null) {
+  if (!dateA) {
     return 1;
   }
-  if (dateB === null) {
+  if (!dateB) {
     return -1;
   }
   return null;
@@ -24,7 +25,7 @@ const getDurationInMinutes = (start, end) =>
 
 
 const sortByTime = (event1, event2) => {
-  const weight = getWeightForNullDate(event1.date.start, event2.date.start);
+  const weight = compareNullDate(event1.date.start, event2.date.start);
   if (weight !== null) {
     return weight;
   }
@@ -45,7 +46,7 @@ const sortByOffers = (event1, event2) =>
   event2.offers.length - event1.offers.length;
 
 const sortByDefault = (event1, event2) => {
-  const weight = getWeightForNullDate(event1.date.start, event2.date.start);
+  const weight = compareNullDate(event1.date.start, event2.date.start);
 
   if (weight !== null){
     return weight;
@@ -54,7 +55,8 @@ const sortByDefault = (event1, event2) => {
   return dayjs(event1.date.start).diff(dayjs(event2.date.start));
 };
 
-const getSortingAlgorythm = (sortType) => {
+//ни один англичанин не в курсе зачем в словах (algo-)rhythm буква h посреди слова
+const getSortingAlgorhythm = (sortType) => {
   switch (sortType) {
     case SortTypes.BY_TIME:
       return sortByTime;
@@ -69,4 +71,4 @@ const getSortingAlgorythm = (sortType) => {
   }
 };
 
-export {getSortingAlgorythm, SortTypes};
+export {getSortingAlgorhythm, SortTypes};

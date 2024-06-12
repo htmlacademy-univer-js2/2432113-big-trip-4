@@ -4,7 +4,7 @@ import { remove, render } from '../framework/render.js';
 import EventsNoneView from '../view/events-none-view.js';
 import EventPresenter from './event-presenter.js';
 import { UpdateTypes, UserActions, FilterTypes, TimeLimit } from '../const.js';
-import { getSortingAlgorythm, SortTypes } from '../sorter-utils.js';
+import { getSortingAlgorhythm, SortTypes } from '../sorter-utils.js';
 import FiltersPresenter from './filters-presenter.js';
 import EventAdderPresenter from './event-adder-presenter.js';
 import { filter } from '../utils.js';
@@ -98,7 +98,7 @@ export default class Presenter extends Observable {
     this.#filterType = this.#filtersModel.filter;
     const events = this.#eventsModel.events;
     const filteredEvents = filter[this.#filterType](events);
-    filteredEvents.sort(getSortingAlgorythm(this.#currentSort));
+    filteredEvents.sort(getSortingAlgorhythm(this.#currentSort));
     return filteredEvents;
   }
 
